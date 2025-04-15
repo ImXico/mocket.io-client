@@ -25,14 +25,6 @@ function isCustomEvent(event: Event): event is CustomEvent {
   return "detail" in event;
 }
 
-function handle(event: Event, handler: Function) {
-  console.log("is custom event?");
-  if (isCustomEvent(event)) {
-    console.log(isCustomEvent(event));
-    return handler.apply(null, event.detail);
-  }
-}
-
 type SocketAttributes = {
   active: boolean;
   connected: boolean;
@@ -44,15 +36,25 @@ type SocketAttributes = {
 type SocketAttributeKey = keyof SocketAttributes;
 type SocketAttributeValue<K extends SocketAttributeKey> = SocketAttributes[K];
 
+type OuterHandler = (event: Event) => void;
+type InnerHandler = (event: Event) => void;
+
+type EventHandlerRegistry = Map<
+  string,
+  Map<
+    OuterHandler,
+    {
+      innerHandler: InnerHandler;
+      once: boolean;
+    }
+  >
+>;
+
 export class MockedSocketContext {
   private readonly clientEventTarget = new CustomEventTarget();
   private readonly serverEventTarget = new CustomEventTarget();
 
-  // TODO
-  // private readonly handlerRegistry: Map<
-  //   string,
-  //   Map<Function, { once: boolean }>
-  // > = new Map();
+  private readonly handlerRegistry: EventHandlerRegistry = new Map();
 
   private readonly attributes: SocketAttributes = {
     active: false,
@@ -84,35 +86,76 @@ export class MockedSocketContext {
     this.attributes.connected = true;
   };
 
-  private mockOn = (eventKey: string, handler: Function) => {
-    // if (!this.handlerRegistry.has(eventKey)) {
-    //   this.handlerRegistry.set(eventKey, new Map());
-    // }
-
-    // this.handlerRegistry.get(eventKey)?.set(handler, { once: false });
-
-    this.clientEventTarget.addEventListener(eventKey, (event) => {
-      console.log("LISTENERR HANDLET", eventKey);
-      handle(event, handler);
-    });
+  private mockDisconnect = () => {
+    this.attributes.connected = false;
+    this.attributes.disconnected = true;
+    this.attributes.id = undefined;
   };
 
-  private mockOnce = (eventKey: string, handler: Function) => {
-    this.clientEventTarget.addEventListener(
-      eventKey,
-      (event) => {
-        handle(event, handler);
-      },
-      {
-        once: true,
+  private mockOn = (eventKey: string, handler: OuterHandler) => {
+    if (!this.handlerRegistry.has(eventKey)) {
+      this.handlerRegistry.set(eventKey, new Map());
+    }
+
+    const innerHandler = (event: Event) => {
+      if (isCustomEvent(event)) {
+        return handler(event.detail);
       }
-    );
+    };
+
+    this.handlerRegistry.get(eventKey)?.set(handler, {
+      innerHandler,
+      once: false,
+    });
+
+    this.clientEventTarget.addEventListener(eventKey, innerHandler);
   };
 
-  private mockOff = (eventKey: string, handler: Function) => {
-    // TODO so in the end we will need to register the handler(s) for each event, so that we can unregister...
-    // or abort signal? no because we might want to off specific callbacks only
-    // this.clientEventTarget.removeEventListener(eventKey, handler);
+  private mockOnce = (eventKey: string, handler: OuterHandler) => {
+    if (!this.handlerRegistry.has(eventKey)) {
+      this.handlerRegistry.set(eventKey, new Map());
+    }
+
+    const innerHandler = (event: Event) => {
+      if (isCustomEvent(event)) {
+        // After handling once, remove the handler.
+        this.mockOff(eventKey, handler);
+        return handler(event.detail);
+      }
+    };
+
+    this.handlerRegistry.get(eventKey)?.set(handler, {
+      innerHandler,
+      once: true,
+    });
+
+    this.clientEventTarget.addEventListener(eventKey, innerHandler);
+  };
+
+  private mockOff = (eventKey: string, handler: OuterHandler) => {
+    const eventHandlers = this.handlerRegistry.get(eventKey);
+
+    if (eventHandlers === undefined) {
+      return;
+    }
+
+    const handlerEntry = eventHandlers.get(handler);
+
+    if (handlerEntry) {
+      // Use the stored innerHandler reference to remove the event listener.
+      this.clientEventTarget.removeEventListener(
+        eventKey,
+        handlerEntry.innerHandler
+      );
+
+      // Also clean up the registry.
+      eventHandlers.delete(handler);
+
+      // If there are no more handlers for this event, remove the event entry.
+      if (eventHandlers.size === 0) {
+        this.handlerRegistry.delete(eventKey);
+      }
+    }
   };
 
   private mockEmitFromClient = <T extends string = string>(
@@ -126,10 +169,42 @@ export class MockedSocketContext {
     );
   };
 
+  private mockEmitFromClientWithAck = <T extends string = string>(
+    eventKey: T,
+    ...args: any[]
+  ) => {
+    // Return a promise that will be resolved when the server sends an acknowledgment
+    return new Promise<any>((resolve) => {
+      // Create a unique callback ID for this acknowledgment
+      const ackId = `ack_${Date.now()}_${Math.random()
+        .toString(36)
+        .substring(2, 9)}`;
+
+      // Set up a one-time event listener for the acknowledgment response.
+      const ackListener = (event: Event) => {
+        if (isCustomEvent(event)) {
+          resolve(event.detail);
+          this.serverEventTarget.removeEventListener(ackId, ackListener);
+        }
+      };
+
+      // Setup a listener for the acknowledgment response.
+      this.serverEventTarget.addEventListener(ackId, ackListener);
+
+      // Emit the event with the additional ackId parameter.
+      this.serverEventTarget.dispatchEvent(
+        new CustomEvent(eventKey, {
+          detail: {
+            args,
+            ackId,
+          },
+        })
+      );
+    });
+  };
+
   private mockEmitReservedFromServer = (eventKey: ReservedServerEvent) => {
-    console.log("@ MOCK EMIT RESERVED @@@@@");
     if (eventKey === "connect") {
-      console.log("entering IF 'connect'");
       console.log(this.attributes);
       this.attributes.connected = true;
       console.log(this.attributes);
@@ -174,6 +249,16 @@ export class MockedSocketContext {
       : this.mockEmitCustomFromServer(eventKey, args);
   };
 
+  public mockAcknowledgeClientEvent = (ackId: string, response: any) => {
+    // Acknowledge on the server, which will trigger the resolve of
+    // the promise on the client side (in `mockEmitFromClientWithAck`).
+    this.serverEventTarget.dispatchEvent(
+      new CustomEvent(ackId, {
+        detail: response,
+      })
+    );
+  };
+
   public readonly client = {
     getAttributes: this.getAttributes,
     getAttribute: this.getAttribute,
@@ -181,13 +266,13 @@ export class MockedSocketContext {
     // mockClose
     // mockCompress
     connect: this.mockConnect,
-    // disconnect: this.mockDisconnect,
+    disconnect: this.mockDisconnect,
     mockEmit: this.mockEmitFromClient,
-    // mockEmitWithAck
+    mockEmitWithAck: this.mockEmitFromClientWithAck,
     // mockListeners:
     // mockListenersAny
     // mockListenersAnyOutgoing
-    // mockOff
+    mockOff: this.mockOff,
     // mockOffAny
     // mockOffAnyOutgoing
     mockOn: this.mockOn,
@@ -203,5 +288,6 @@ export class MockedSocketContext {
 
   public readonly server = {
     mockEmit: this.mockEmitFromServer,
+    mockAcknowledgeClientEvent: this.mockAcknowledgeClientEvent,
   };
 }
