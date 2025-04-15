@@ -1,0 +1,26 @@
+{
+  "name": "socket-lib",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index",
+  "types": "dist/index",
+  "scripts": {
+    "test": "vitest",
+    "build": "vite build",
+    "print-paths": "node -e 'console.log(module.paths)'"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^5.8.2",
+    "vite": "^4.0.0"
+  },
+  "peerDependencies": {
+    "socket.io-client": "^4.8.1",
+    "vitest": "^3.0.8"
+  },
+  "dependencies": {
+    "vite-plugin-dts": "^4.5.3"
+  }
+}
