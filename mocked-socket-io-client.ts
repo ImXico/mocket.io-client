@@ -31,6 +31,7 @@ type SocketAttributes = {
   disconnected: boolean;
   recovered: boolean;
   id: string | undefined;
+  timeout?: number;
 };
 
 type SocketAttributeKey = keyof SocketAttributes;
@@ -62,6 +63,7 @@ export class MockedSocketContext {
     disconnected: true,
     recovered: false,
     id: undefined,
+    timeout: undefined,
     // io:
   };
 
@@ -203,6 +205,15 @@ export class MockedSocketContext {
     });
   };
 
+  // 'send' is a shorthand for emitting a 'message' event
+  private mockSend = (data: any, callback?: (response: any) => void) => {
+    if (callback) {
+      return this.mockEmitFromClientWithAck("message", data).then(callback);
+    } else {
+      return this.mockEmitFromClient("message", [data]);
+    }
+  };
+
   private mockEmitReservedFromServer = (eventKey: ReservedServerEvent) => {
     if (eventKey === "connect") {
       console.log(this.attributes);
@@ -259,6 +270,14 @@ export class MockedSocketContext {
     );
   };
 
+  private mockTimeout = (timeout: number) => {
+    // Return the client interface with the updated timeout for chaining.
+    // Actual socket.io uses this value to configure connection/acknowledgment timeouts.
+    // In our mock, we can store it but it won't affect functionality.
+    this.attributes.timeout = timeout;
+    return this.client;
+  };
+
   public readonly client = {
     getAttributes: this.getAttributes,
     getAttribute: this.getAttribute,
@@ -282,8 +301,8 @@ export class MockedSocketContext {
     mockOpen: this.mockConnect,
     // mockPrependAny
     // mockPrependAnyOutgoing
-    // mockSend
-    // mockTimeout
+    mockSend: this.mockSend,
+    mockTimeout: this.mockTimeout,
   };
 
   public readonly server = {
