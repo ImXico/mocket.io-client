@@ -279,7 +279,7 @@ export class MockedSocketContext {
     // mockOnAny
     // mockOnAnyOutgoing
     mockOnce: this.mockOnce,
-    // mockOpen
+    mockOpen: this.mockConnect,
     // mockPrependAny
     // mockPrependAnyOutgoing
     // mockSend
