@@ -230,9 +230,9 @@ export class MockedSocketContext {
   private mockSend = (data: any, callback?: (response: any) => void) => {
     if (callback) {
       return this.mockEmitFromClientWithAck("message", data).then(callback);
-    } else {
-      return this.mockEmitFromClient("message", [data]);
     }
+
+    return this.mockEmitFromClient("message", [data]);
   };
 
   private mockEmitReservedFromServer = (eventKey: ReservedServerEvent) => {
@@ -291,6 +291,20 @@ export class MockedSocketContext {
     );
   };
 
+  private mockListeners = (eventKey?: string) => {
+    if (eventKey) {
+      const eventHandlers = this.handlerRegistry.get(eventKey);
+      return !!eventHandlers ? Array.from(eventHandlers.keys()) : [];
+    }
+
+    const allHandlers: Record<string, OuterHandler[]> = {};
+    this.handlerRegistry.forEach((handlers, event) => {
+      allHandlers[event] = Array.from(handlers.keys());
+    });
+
+    return allHandlers;
+  };
+
   public readonly client = {
     getAttributes: this.getAttributes,
     getAttribute: this.getAttribute,
@@ -301,7 +315,7 @@ export class MockedSocketContext {
     disconnect: this.mockDisconnect,
     mockEmit: this.mockEmitFromClient,
     mockEmitWithAck: this.mockEmitFromClientWithAck,
-    // mockListeners:
+    mockListeners: this.mockListeners,
     // mockListenersAny
     // mockListenersAnyOutgoing
     mockOff: this.mockOff,
