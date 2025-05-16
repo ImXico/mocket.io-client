@@ -103,7 +103,17 @@ export class MockedSocketContext {
   private readonly serverEventTarget = new CustomEventTarget();
 
   private readonly handlerRegistry: EventHandlerRegistry = new Map();
+
   private readonly anyHandlerRegistry: Map<
+    OuterHandler,
+    {
+      innerHandler: InnerHandler;
+      once: boolean;
+    }
+  > = new Map();
+
+  // Add a new registry for outgoing events
+  private readonly anyOutgoingHandlerRegistry: Map<
     OuterHandler,
     {
       innerHandler: InnerHandler;
@@ -370,6 +380,7 @@ export class MockedSocketContext {
     return allHandlers;
   };
 
+  // Triggered when the client receives any event from the server
   private mockOnAny = (handler: OuterHandler) => {
     // Create an inner handler that adapts the event format
     const innerHandler = (event: Event) => {
@@ -401,6 +412,47 @@ export class MockedSocketContext {
     return this.client;
   };
 
+  // Triggered when the client emits any event to the server
+  private mockOnAnyOutgoing = (handler: OuterHandler) => {
+    // Create an inner handler that adapts the event format for outgoing events
+    const innerHandler = (event: Event) => {
+      if (isCustomEvent(event)) {
+        // Socket.io's onAnyOutgoing callback signature is (eventName, ...args)
+        if (Array.isArray(event.detail)) {
+          // If detail is an array, spread it as additional arguments after the event name
+          return handler(event.type, ...event.detail);
+        } else if (
+          event.detail &&
+          typeof event.detail === "object" &&
+          "args" in event.detail
+        ) {
+          // Special case for acknowledgment events which have a different structure
+          return handler(event.type, ...event.detail.args);
+        } else {
+          // Otherwise pass event name and detail as separate arguments
+          return handler(event.type, event.detail);
+        }
+      } else {
+        // For non-custom events, just pass the event type
+        return handler(event.type);
+      }
+    };
+
+    // Store the handler mapping for later retrieval or removal
+    this.anyOutgoingHandlerRegistry.set(handler, {
+      innerHandler,
+      once: false,
+    });
+
+    // Register with the special "*" event type on the serverEventTarget
+    // This is the key difference - we're listening on serverEventTarget
+    // which receives events when client emits something
+    this.serverEventTarget.addEventListener("*", innerHandler);
+
+    // Return the client for chaining
+    return this.client;
+  };
+
   private mockListenersAny = () => {
     // Return all catch-all handlers
     return Array.from(this.anyHandlerRegistry.keys());
@@ -424,7 +476,7 @@ export class MockedSocketContext {
     // mockOffAnyOutgoing
     mockOn: this.mockOn,
     mockOnAny: this.mockOnAny,
-    // mockOnAnyOutgoing
+    mockOnAnyOutgoing: this.mockOnAnyOutgoing,
     mockOnce: this.mockOnce,
     mockOpen: this.mockConnect,
     // mockPrependAny
