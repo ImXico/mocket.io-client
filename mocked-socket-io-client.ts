@@ -263,7 +263,7 @@ export class MockedSocketContext {
     getAttributes: this.getAttributes,
     getAttribute: this.getAttribute,
     mockAttribute: this.mockAttribute,
-    // mockClose
+    mockClose: this.mockDisconnect,
     // mockCompress
     connect: this.mockConnect,
     disconnect: this.mockDisconnect,
