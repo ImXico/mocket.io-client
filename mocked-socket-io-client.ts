@@ -458,6 +458,11 @@ export class MockedSocketContext {
     return Array.from(this.anyHandlerRegistry.keys());
   };
 
+  private mockListenersAnyOutgoing = () => {
+    // Return all outgoing catch-all handlers
+    return Array.from(this.anyOutgoingHandlerRegistry.keys());
+  };
+
   public readonly client = {
     getAttributes: this.getAttributes,
     getAttribute: this.getAttribute,
@@ -470,7 +475,7 @@ export class MockedSocketContext {
     mockEmitWithAck: this.mockEmitFromClientWithAck,
     mockListeners: this.mockListeners,
     mockListenersAny: this.mockListenersAny,
-    // mockListenersAnyOutgoing
+    mockListenersAnyOutgoing: this.mockListenersAnyOutgoing,
     mockOff: this.mockOff,
     // mockOffAny
     // mockOffAnyOutgoing
