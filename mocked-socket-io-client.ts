@@ -111,36 +111,6 @@ export class MockedSocketContext {
     }
   > = new Map();
 
-  private mockOnAny = (handler: OuterHandler) => {
-    // Create an inner handler that adapts the event format
-    const innerHandler = (event: Event) => {
-      if (isCustomEvent(event)) {
-        // Socket.io's onAny callback signature is (eventName, ...args)
-        if (Array.isArray(event.detail)) {
-          // If detail is an array, spread it as additional arguments after the event name
-          return handler(event.type, ...event.detail);
-        } else {
-          // Otherwise pass event name and detail as separate arguments
-          return handler(event.type, event.detail);
-        }
-      } else {
-        // For non-custom events, just pass the event type
-        return handler(event.type);
-      }
-    };
-    // Store the handler mapping for later retrieval or removal
-    this.anyHandlerRegistry.set(handler, {
-      innerHandler,
-      once: false,
-    });
-
-    // Register with the special "*" event type in CustomEventTarget
-    this.clientEventTarget.addEventListener("*", innerHandler);
-
-    // Return the client for chaining
-    return this.client;
-  };
-
   private readonly attributes: SocketAttributes = {
     active: false,
     connected: false,
@@ -400,6 +370,42 @@ export class MockedSocketContext {
     return allHandlers;
   };
 
+  private mockOnAny = (handler: OuterHandler) => {
+    // Create an inner handler that adapts the event format
+    const innerHandler = (event: Event) => {
+      if (isCustomEvent(event)) {
+        // Socket.io's onAny callback signature is (eventName, ...args)
+        if (Array.isArray(event.detail)) {
+          // If detail is an array, spread it as additional arguments after the event name
+          return handler(event.type, ...event.detail);
+        } else {
+          // Otherwise pass event name and detail as separate arguments
+          return handler(event.type, event.detail);
+        }
+      } else {
+        // For non-custom events, just pass the event type
+        return handler(event.type);
+      }
+    };
+
+    // Store the handler mapping for later retrieval or removal
+    this.anyHandlerRegistry.set(handler, {
+      innerHandler,
+      once: false,
+    });
+
+    // Register with the special "*" event type in CustomEventTarget
+    this.clientEventTarget.addEventListener("*", innerHandler);
+
+    // Return the client for chaining
+    return this.client;
+  };
+
+  private mockListenersAny = () => {
+    // Return all catch-all handlers
+    return Array.from(this.anyHandlerRegistry.keys());
+  };
+
   public readonly client = {
     getAttributes: this.getAttributes,
     getAttribute: this.getAttribute,
@@ -411,7 +417,7 @@ export class MockedSocketContext {
     mockEmit: this.mockEmitFromClient,
     mockEmitWithAck: this.mockEmitFromClientWithAck,
     mockListeners: this.mockListeners,
-    // mockListenersAny
+    mockListenersAny: this.mockListenersAny,
     // mockListenersAnyOutgoing
     mockOff: this.mockOff,
     // mockOffAny
