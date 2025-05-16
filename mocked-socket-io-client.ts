@@ -32,6 +32,7 @@ type SocketAttributes = {
   recovered: boolean;
   id: string | undefined;
   timeout?: number;
+  compress?: boolean;
 };
 
 type SocketAttributeKey = keyof SocketAttributes;
@@ -64,6 +65,7 @@ export class MockedSocketContext {
     recovered: false,
     id: undefined,
     timeout: undefined,
+    compress: true,
     // io:
   };
 
@@ -92,6 +94,25 @@ export class MockedSocketContext {
     this.attributes.connected = false;
     this.attributes.disconnected = true;
     this.attributes.id = undefined;
+  };
+
+  private mockTimeout = (timeout: number) => {
+    // socket.io uses this value to configure connection/acknowledgment timeouts.
+    // In our mock, we can store it but it won't affect functionality.
+    this.attributes.timeout = timeout;
+
+    // Return the client interface with the updated timeout for chaining.
+    return this.client;
+  };
+
+  private mockCompress = (compress: boolean) => {
+    // In socket.io client, this would enable/disable compression
+    // for the next emit. In our mock we can simply track the state.
+
+    this.attributes.compress = compress;
+
+    // Return the client interface with the updated timeout for chaining.
+    return this.client;
   };
 
   private mockOn = (eventKey: string, handler: OuterHandler) => {
@@ -270,20 +291,12 @@ export class MockedSocketContext {
     );
   };
 
-  private mockTimeout = (timeout: number) => {
-    // Return the client interface with the updated timeout for chaining.
-    // Actual socket.io uses this value to configure connection/acknowledgment timeouts.
-    // In our mock, we can store it but it won't affect functionality.
-    this.attributes.timeout = timeout;
-    return this.client;
-  };
-
   public readonly client = {
     getAttributes: this.getAttributes,
     getAttribute: this.getAttribute,
     mockAttribute: this.mockAttribute,
     mockClose: this.mockDisconnect,
-    // mockCompress
+    mockCompress: this.mockCompress,
     connect: this.mockConnect,
     disconnect: this.mockDisconnect,
     mockEmit: this.mockEmitFromClient,
