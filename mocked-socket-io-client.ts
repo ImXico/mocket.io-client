@@ -1,5 +1,44 @@
 class CustomEventTarget extends EventTarget {
-  // TODO see if somethign makes sense to add here?
+  private readonly anyListeners: Array<(event: Event) => void> = [];
+
+  addEventListener(
+    type: string,
+    listener: EventListener,
+    options?: AddEventListenerOptions
+  ): void {
+    super.addEventListener(type, listener, options);
+
+    // Special handling for '*' (catch-all) event type
+    if (type === "*") {
+      this.anyListeners.push(listener);
+    }
+  }
+
+  removeEventListener(
+    type: string,
+    listener: EventListener,
+    options?: EventListenerOptions
+  ): void {
+    super.removeEventListener(type, listener, options);
+
+    // Special handling for '*' (catch-all) event type
+    if (type === "*") {
+      const index = this.anyListeners.indexOf(listener);
+      if (index !== -1) {
+        this.anyListeners.splice(index, 1);
+      }
+    }
+  }
+
+  dispatchEvent(event: Event): boolean {
+    // Trigger any catch-all listeners
+    for (const listener of this.anyListeners) {
+      listener.call(this, event);
+    }
+
+    // Regular event dispatch
+    return super.dispatchEvent(event);
+  }
 }
 
 const RESERVED_SERVER_EVENTS = {
@@ -38,8 +77,15 @@ type SocketAttributes = {
 type SocketAttributeKey = keyof SocketAttributes;
 type SocketAttributeValue<K extends SocketAttributeKey> = SocketAttributes[K];
 
-type OuterHandler = (event: Event) => void;
+/**
+ * DOM-style handler that receives an Event object.
+ */
 type InnerHandler = (event: Event) => void;
+
+/**
+ * Socket.io-style handler that receives the actual data.
+ */
+type OuterHandler = (...args: any[]) => void;
 
 type EventHandlerRegistry = Map<
   string,
@@ -57,6 +103,43 @@ export class MockedSocketContext {
   private readonly serverEventTarget = new CustomEventTarget();
 
   private readonly handlerRegistry: EventHandlerRegistry = new Map();
+  private readonly anyHandlerRegistry: Map<
+    OuterHandler,
+    {
+      innerHandler: InnerHandler;
+      once: boolean;
+    }
+  > = new Map();
+
+  private mockOnAny = (handler: OuterHandler) => {
+    // Create an inner handler that adapts the event format
+    const innerHandler = (event: Event) => {
+      if (isCustomEvent(event)) {
+        // Socket.io's onAny callback signature is (eventName, ...args)
+        if (Array.isArray(event.detail)) {
+          // If detail is an array, spread it as additional arguments after the event name
+          return handler(event.type, ...event.detail);
+        } else {
+          // Otherwise pass event name and detail as separate arguments
+          return handler(event.type, event.detail);
+        }
+      } else {
+        // For non-custom events, just pass the event type
+        return handler(event.type);
+      }
+    };
+    // Store the handler mapping for later retrieval or removal
+    this.anyHandlerRegistry.set(handler, {
+      innerHandler,
+      once: false,
+    });
+
+    // Register with the special "*" event type in CustomEventTarget
+    this.clientEventTarget.addEventListener("*", innerHandler);
+
+    // Return the client for chaining
+    return this.client;
+  };
 
   private readonly attributes: SocketAttributes = {
     active: false,
@@ -108,7 +191,6 @@ export class MockedSocketContext {
   private mockCompress = (compress: boolean) => {
     // In socket.io client, this would enable/disable compression
     // for the next emit. In our mock we can simply track the state.
-
     this.attributes.compress = compress;
 
     // Return the client interface with the updated timeout for chaining.
@@ -122,6 +204,12 @@ export class MockedSocketContext {
 
     const innerHandler = (event: Event) => {
       if (isCustomEvent(event)) {
+        // If detail is an array, spread it to match multiple arguments
+        if (Array.isArray(event.detail)) {
+          return handler(...event.detail);
+        }
+
+        // Otherwise pass as a single argument
         return handler(event.detail);
       }
     };
@@ -143,6 +231,13 @@ export class MockedSocketContext {
       if (isCustomEvent(event)) {
         // After handling once, remove the handler.
         this.mockOff(eventKey, handler);
+
+        // If detail is an array, spread it to match multiple arguments
+        if (Array.isArray(event.detail)) {
+          return handler(...event.detail);
+        }
+
+        // Otherwise pass as a single argument
         return handler(event.detail);
       }
     };
@@ -322,7 +417,7 @@ export class MockedSocketContext {
     // mockOffAny
     // mockOffAnyOutgoing
     mockOn: this.mockOn,
-    // mockOnAny
+    mockOnAny: this.mockOnAny,
     // mockOnAnyOutgoing
     mockOnce: this.mockOnce,
     mockOpen: this.mockConnect,
