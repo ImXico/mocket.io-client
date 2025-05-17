@@ -478,6 +478,34 @@ export class MockedSocketContext {
     return this.client;
   };
 
+  private mockPrependAny = (handler: OuterHandler) => {
+    // Create an inner handler that adapts the event format
+    const innerHandler = (event: Event) => {
+      if (isCustomEvent(event)) {
+        // Socket.io's onAny callback signature is (eventName, ...args)
+        if (Array.isArray(event.detail)) {
+          return handler(event.type, ...event.detail);
+        } else {
+          return handler(event.type, event.detail);
+        }
+      } else {
+        return handler(event.type);
+      }
+    };
+
+    // Store the handler mapping for later retrieval or removal
+    this.anyHandlerRegistry.set(handler, {
+      innerHandler,
+      once: false,
+    });
+
+    // We need to modify CustomEventTarget to support prepending
+    // For now, we can unshift to anyListeners array instead of push
+    this.clientEventTarget.prependEventListener("*", innerHandler);
+
+    return this.client;
+  };
+
   // Triggered when the client emits any event to the server
   private mockOnAnyOutgoing = (handler: OuterHandler) => {
     // Create an inner handler that adapts the event format for outgoing events
