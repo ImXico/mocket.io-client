@@ -147,16 +147,19 @@ export class MockedSocketContext {
     value: SocketAttributeValue<K>
   ) => {
     this.attributes[key] = value;
+    return this.client;
   };
 
   private mockConnect = () => {
     this.attributes.connected = true;
+    return this.client;
   };
 
   private mockDisconnect = () => {
     this.attributes.connected = false;
     this.attributes.disconnected = true;
     this.attributes.id = undefined;
+    return this.client;
   };
 
   private mockTimeout = (timeout: number) => {
@@ -200,6 +203,8 @@ export class MockedSocketContext {
     });
 
     this.clientEventTarget.addEventListener(eventKey, innerHandler);
+
+    return this.client;
   };
 
   private mockOnce = (eventKey: string, handler: OuterHandler) => {
@@ -228,6 +233,8 @@ export class MockedSocketContext {
     });
 
     this.clientEventTarget.addEventListener(eventKey, innerHandler);
+
+    return this.client;
   };
 
   private mockOff = (eventKey: string, handler: OuterHandler) => {
@@ -254,6 +261,54 @@ export class MockedSocketContext {
         this.handlerRegistry.delete(eventKey);
       }
     }
+
+    return this.client;
+  };
+
+  private mockOffAny = (handler?: OuterHandler) => {
+    if (handler) {
+      const handlerEntry = this.anyHandlerRegistry.get(handler);
+
+      if (handlerEntry) {
+        this.clientEventTarget.removeEventListener(
+          "*",
+          handlerEntry.innerHandler
+        );
+
+        this.anyHandlerRegistry.delete(handler);
+        return this.client;
+      }
+    }
+
+    this.anyHandlerRegistry.forEach((entry) => {
+      this.clientEventTarget.removeEventListener("*", entry.innerHandler);
+    });
+    this.anyHandlerRegistry.clear();
+
+    return this.client;
+  };
+
+  private mockOffAnyOutgoing = (handler?: OuterHandler) => {
+    if (handler) {
+      const handlerEntry = this.anyOutgoingHandlerRegistry.get(handler);
+
+      if (handlerEntry) {
+        this.serverEventTarget.removeEventListener(
+          "*",
+          handlerEntry.innerHandler
+        );
+
+        this.anyOutgoingHandlerRegistry.delete(handler);
+        return this.client;
+      }
+    }
+
+    this.anyOutgoingHandlerRegistry.forEach((entry) => {
+      this.serverEventTarget.removeEventListener("*", entry.innerHandler);
+    });
+    this.anyOutgoingHandlerRegistry.clear();
+
+    return this.client;
   };
 
   private mockEmitFromClient = <T extends string = string>(
@@ -265,6 +320,8 @@ export class MockedSocketContext {
         detail: args,
       })
     );
+
+    return this.client;
   };
 
   private mockEmitFromClientWithAck = <T extends string = string>(
@@ -477,8 +534,8 @@ export class MockedSocketContext {
     mockListenersAny: this.mockListenersAny,
     mockListenersAnyOutgoing: this.mockListenersAnyOutgoing,
     mockOff: this.mockOff,
-    // mockOffAny
-    // mockOffAnyOutgoing
+    mockOffAny: this.mockOffAny,
+    mockOffAnyOutgoing: this.mockOffAnyOutgoing,
     mockOn: this.mockOn,
     mockOnAny: this.mockOnAny,
     mockOnAnyOutgoing: this.mockOnAnyOutgoing,
