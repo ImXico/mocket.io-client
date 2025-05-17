@@ -320,6 +320,45 @@ export class MockedSocketContext {
     return this.client;
   };
 
+  private mockPrependAnyOutgoing = (handler: OuterHandler) => {
+    // Create an inner handler that adapts the event format for outgoing events
+    const innerHandler = (event: Event) => {
+      if (isCustomEvent(event)) {
+        // Socket.io's onAnyOutgoing callback signature is (eventName, ...args)
+        if (Array.isArray(event.detail)) {
+          // If detail is an array, spread it as additional arguments after the event name
+          return handler(event.type, ...event.detail);
+        } else if (
+          event.detail &&
+          typeof event.detail === "object" &&
+          "args" in event.detail
+        ) {
+          // Special case for acknowledgment events which have a different structure
+          return handler(event.type, ...event.detail.args);
+        } else {
+          // Otherwise pass event name and detail as separate arguments
+          return handler(event.type, event.detail);
+        }
+      } else {
+        // For non-custom events, just pass the event type
+        return handler(event.type);
+      }
+    };
+
+    // Store the handler mapping for later retrieval or removal
+    this.anyOutgoingHandlerRegistry.set(handler, {
+      innerHandler,
+      once: false,
+    });
+
+    // Register with the special "*" event type on the serverEventTarget
+    // Use prependEventListener instead of addEventListener
+    this.serverEventTarget.prependEventListener("*", innerHandler);
+
+    // Return the client for chaining
+    return this.client;
+  };
+
   private mockEmitFromClient = <T extends string = string>(
     eventKey: T,
     args?: any[]
@@ -447,6 +486,7 @@ export class MockedSocketContext {
   };
 
   // Triggered when the client receives any event from the server
+  // `onAny`: Adds listeners to the end of the queue (they execute last)
   private mockOnAny = (handler: OuterHandler) => {
     // Create an inner handler that adapts the event format
     const innerHandler = (event: Event) => {
@@ -578,8 +618,8 @@ export class MockedSocketContext {
     mockOnAnyOutgoing: this.mockOnAnyOutgoing,
     mockOnce: this.mockOnce,
     mockOpen: this.mockConnect,
-    // mockPrependAny
-    // mockPrependAnyOutgoing
+    mockPrependAny: this.mockPrependAny,
+    mockPrependAnyOutgoing: this.mockPrependAnyOutgoing,
     mockSend: this.mockSend,
     mockTimeout: this.mockTimeout,
   };
