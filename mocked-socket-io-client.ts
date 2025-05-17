@@ -14,6 +14,15 @@ class CustomEventTarget extends EventTarget {
     }
   }
 
+  prependEventListener(type: string, listener: EventListener): void {
+    super.addEventListener(type, listener);
+
+    if (type === "*") {
+      // Add to the beginning of the array
+      this.anyListeners.unshift(listener);
+    }
+  }
+
   removeEventListener(
     type: string,
     listener: EventListener,
