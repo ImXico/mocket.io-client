@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, vi } from "vitest";
+import { afterEach, beforeEach, vi, TestContext } from "vitest";
 import { MockedSocketContext } from "./mocked-socket-io-client";
 
 // try {
@@ -21,10 +21,10 @@ vi.mock("socket.io-client", async () => {
   };
 });
 
-beforeEach(async (context) => {
+beforeEach(async (context: TestContext) => {
   context.mockedSocketContext = new MockedSocketContext();
 });
 
-afterEach(async (context) => {
+afterEach(async (context: TestContext) => {
   context.mockedSocketContext = undefined;
 });
