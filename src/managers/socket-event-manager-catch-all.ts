@@ -25,7 +25,7 @@ export class SocketEventManagerCatchAll {
 
   // Triggered when the client receives any event from the server
   // `onAny`: Adds listeners to the end of the queue (they execute last)
-  public onAnyIncoming = (handler: OuterHandler) => {
+  public onAnyIncoming = (handler: OuterHandler): SocketEventTarget => {
     // Create an inner handler that adapts the event format
     const innerHandler = (event: Event) => {
       if (isCustomEvent(event)) {
@@ -56,7 +56,7 @@ export class SocketEventManagerCatchAll {
   };
 
   // Triggered when the client emits any event to the server
-  public onAnyOutgoing = (handler: OuterHandler) => {
+  public onAnyOutgoing = (handler: OuterHandler): SocketEventTarget => {
     // Create an inner handler that adapts the event format for outgoing events
     const innerHandler = (event: Event) => {
       if (isCustomEvent(event)) {
@@ -96,7 +96,7 @@ export class SocketEventManagerCatchAll {
     return this.clientEventTarget;
   };
 
-  public offAnyIncoming = (handler?: OuterHandler) => {
+  public offAnyIncoming = (handler?: OuterHandler): SocketEventTarget => {
     if (handler) {
       const handlerEntry = this.anyIncomingHandlerRegistry.get(handler);
 
@@ -117,12 +117,13 @@ export class SocketEventManagerCatchAll {
         entry.innerHandler
       );
     });
+
     this.anyIncomingHandlerRegistry.clear();
 
     return this.clientEventTarget;
   };
 
-  public offAnyOutgoing = (handler?: OuterHandler) => {
+  public offAnyOutgoing = (handler?: OuterHandler): SocketEventTarget => {
     if (handler) {
       const handlerEntry = this.anyOutgoingHandlerRegistry.get(handler);
 
@@ -149,7 +150,7 @@ export class SocketEventManagerCatchAll {
     return this.clientEventTarget;
   };
 
-  public prependAnyIncoming = (handler: OuterHandler) => {
+  public prependAnyIncoming = (handler: OuterHandler): SocketEventTarget => {
     // Create an inner handler that adapts the event format
     const innerHandler = (event: Event) => {
       if (isCustomEvent(event)) {
@@ -180,7 +181,7 @@ export class SocketEventManagerCatchAll {
     return this.clientEventTarget;
   };
 
-  public prependAnyOutgoing = (handler: OuterHandler) => {
+  public prependAnyOutgoing = (handler: OuterHandler): SocketEventTarget => {
     // Create an inner handler that adapts the event format for outgoing events
     const innerHandler = (event: Event) => {
       if (isCustomEvent(event)) {
@@ -222,13 +223,11 @@ export class SocketEventManagerCatchAll {
     return this.clientEventTarget;
   };
 
-  public listenersAnyIncoming = () => {
-    // Return all catch-all handlers
+  public listenersAnyIncoming = (): OuterHandler[] => {
     return Array.from(this.anyIncomingHandlerRegistry.keys());
   };
 
-  public listenersAnyOutgoing = () => {
-    // Return all outgoing catch-all handlers
+  public listenersAnyOutgoing = (): OuterHandler[] => {
     return Array.from(this.anyOutgoingHandlerRegistry.keys());
   };
 }

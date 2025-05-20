@@ -23,7 +23,7 @@ export class SocketEventManager {
 
   private readonly handlerRegistry: EventHandlerRegistry = new Map();
 
-  public on = (eventKey: string, handler: OuterHandler) => {
+  public on = (eventKey: string, handler: OuterHandler): SocketEventTarget => {
     if (!this.handlerRegistry.has(eventKey)) {
       this.handlerRegistry.set(eventKey, new Map());
     }
@@ -46,7 +46,10 @@ export class SocketEventManager {
     return this.clientEventTarget;
   };
 
-  public once = (eventKey: string, handler: OuterHandler) => {
+  public once = (
+    eventKey: string,
+    handler: OuterHandler
+  ): SocketEventTarget => {
     if (!this.handlerRegistry.has(eventKey)) {
       this.handlerRegistry.set(eventKey, new Map());
     }
@@ -72,11 +75,11 @@ export class SocketEventManager {
     return this.clientEventTarget;
   };
 
-  public off = (eventKey: string, handler: OuterHandler) => {
+  public off = (eventKey: string, handler: OuterHandler): SocketEventTarget => {
     const eventHandlers = this.handlerRegistry.get(eventKey);
 
     if (eventHandlers === undefined) {
-      return;
+      return this.clientEventTarget;
     }
 
     const handlerEntry = eventHandlers.get(handler);
@@ -100,17 +103,15 @@ export class SocketEventManager {
     return this.clientEventTarget;
   };
 
-  public listeners = (eventKey?: string) => {
+  public listeners = (eventKey?: string): OuterHandler[] => {
     if (eventKey) {
       const eventHandlers = this.handlerRegistry.get(eventKey);
       return !!eventHandlers ? Array.from(eventHandlers.keys()) : [];
     }
 
-    const allHandlers: Record<string, OuterHandler[]> = {};
-    this.handlerRegistry.forEach((handlers, event) => {
-      allHandlers[event] = Array.from(handlers.keys());
-    });
-
-    return allHandlers;
+    return this.handlerRegistry
+      .values()
+      .flatMap((handlers) => Array.from(handlers.keys()))
+      .toArray();
   };
 }
