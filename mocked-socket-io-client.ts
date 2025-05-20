@@ -42,7 +42,7 @@ export class MockedSocketContext {
     mockEmitWithAck: this.emitManager.emitFromClientWithAck,
     mockListeners: this.eventManager.listeners,
     mockListenersAny: this.eventManagerCatchAll.listenersAnyIncoming,
-    mockListenersAnyOutgoing: this.eventManagerCatchAll.onAnyOutgoing,
+    mockListenersAnyOutgoing: this.eventManagerCatchAll.listenersAnyOutgoing,
     mockOff: this.eventManager.off,
     mockOffAny: this.eventManagerCatchAll.offAnyIncoming,
     mockOffAnyOutgoing: this.eventManagerCatchAll.offAnyOutgoing,
