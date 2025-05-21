@@ -1,4 +1,4 @@
-import { SocketEventTarget } from "./socket-event-target";
+import { SocketEventTarget } from "./target/socket-event-target";
 
 /**
  * DOM-style handler that receives an Event object.

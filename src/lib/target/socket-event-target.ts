@@ -1,4 +1,4 @@
-import { CATCH_ALL_EVENT_TYPE } from "./constants";
+import { CATCH_ALL_EVENT_TYPE } from "../constants";
 
 /**
  * A custom EventTarget implementation that allows for catch-all event listeners.
