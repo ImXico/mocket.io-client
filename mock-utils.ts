@@ -1,6 +1,6 @@
 import { vi } from "vitest";
 import { MockedSocketContext } from "./mocked-socket-io-client";
-import { MockedSocketIo } from "./src/types";
+import { MockedSocketIo } from "./src/lib/types";
 
 export const mockSocketIo = (
   io: unknown,
