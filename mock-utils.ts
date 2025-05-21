@@ -1,19 +1,22 @@
-import { vi } from "vitest";
 import { MockedSocketContext } from "./mocked-socket-io-client";
 import { MockedSocketIo } from "./src/lib/types";
+import { resolveTestRunner } from "./src/test-runner-adapters/adapter";
 
-export const mockSocketIo = (
+export const mockSocketIoEnvironment = (
   io: unknown,
   context: MockedSocketContext | undefined
 ) => {
   if (context === undefined) {
     throw new Error(
-      "Make sure to include the `vitest.global-mocks` in your vitest setup files."
+      "Make sure to include the appropriate global mocks in your test setup files."
     );
   }
 
-  // @ts-expect-error - we're mocking just the public API.
-  vi.mocked(io).mockImplementation(() => {
+  const testRunner = resolveTestRunner();
+  const mockedSocketIo = testRunner.mock(io);
+
+  // Create a socket factory function that matches Socket.io's API structure
+  const socketFactory = () => {
     return {
       get connected() {
         return context.client.getAttribute("connected");
@@ -52,7 +55,16 @@ export const mockSocketIo = (
       prependAny: context.client.mockPrependAnyIncoming,
       prependAnyOutgoing: context.client.mockPrependAnyOutgoing,
     } satisfies MockedSocketIo;
-  });
+  };
+
+  // Add common Socket.io properties to the factory function
+  socketFactory.lookup = socketFactory; // Alias for main function
+  socketFactory.connect = socketFactory; // Another alias
+  socketFactory.protocol = 5; // Current Socket.io protocol version
+  socketFactory.Manager = class MockManager {};
+  socketFactory.Socket = class MockSocket {};
+
+  mockedSocketIo.mockImplementation(() => socketFactory);
 
   return {
     client: context.client,
