@@ -6,6 +6,7 @@
   "types": "dist/index",
   "scripts": {
     "test": "vitest",
+    "test:examples": "vitest --config examples/vitest.examples.config.ts",
     "build": "vite build",
     "print-paths": "node -e 'console.log(module.paths)'"
   },
@@ -14,11 +15,11 @@
   "license": "ISC",
   "devDependencies": {
     "typescript": "^5.8.2",
-    "vite": "^4.0.0"
+    "vite": "^4.0.0",
+    "vitest": "^3.0.8"
   },
   "peerDependencies": {
-    "socket.io-client": "^4.8.1",
-    "vitest": "^3.0.8"
+    "socket.io-client": "^4.8.1"
   },
   "dependencies": {
     "vite-plugin-dts": "^4.5.3"

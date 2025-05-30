@@ -14,9 +14,6 @@ importers:
       vite-plugin-dts:
         specifier: ^4.5.3
         version: 4.5.3(rollup@4.36.0)(typescript@5.8.2)(vite@4.5.9)
-      vitest:
-        specifier: ^3.0.8
-        version: 3.0.9
     devDependencies:
       typescript:
         specifier: ^5.8.2
@@ -24,6 +21,9 @@ importers:
       vite:
         specifier: ^4.0.0
         version: 4.5.9
+      vitest:
+        specifier: ^3.0.8
+        version: 3.0.9
 
 packages:
 
