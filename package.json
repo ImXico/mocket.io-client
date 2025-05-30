@@ -6,7 +6,7 @@
   "types": "dist/index",
   "scripts": {
     "test": "vitest",
-    "test:examples": "vitest --config examples/vitest.examples.config.ts",
+    "test:examples": "vitest run examples/*.test.ts",
     "build": "vite build",
     "print-paths": "node -e 'console.log(module.paths)'",
     "prettier:check": "prettier --check .",
