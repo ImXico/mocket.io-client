@@ -29,11 +29,11 @@ export type MockedSocketIoClientApi = {
   timeout: (timeout: number) => SocketEventTarget;
   send: (
     data: any,
-    callback?: (response: any) => void
+    callback?: (response: any) => void,
   ) => SocketEventTarget | Promise<void>;
   emit: <T extends string = string>(
     eventKey: T,
-    args?: any[]
+    args?: any[],
   ) => SocketEventTarget;
   emitWithAck: <T extends string = string>(
     eventKey: T,
@@ -47,13 +47,13 @@ export type MockedSocketIoClientApi = {
   offAnyOutgoing: (handler: OuterHandler) => SocketEventTarget;
   on: <T extends string = string>(
     event: T,
-    handler: OuterHandler
+    handler: OuterHandler,
   ) => SocketEventTarget;
   onAny: (handler: OuterHandler) => SocketEventTarget;
   onAnyOutgoing: (handler: OuterHandler) => SocketEventTarget;
   once: <T extends string = string>(
     event: T,
-    handler: OuterHandler
+    handler: OuterHandler,
   ) => SocketEventTarget;
   prependAny: (handler: OuterHandler) => SocketEventTarget;
   prependAnyOutgoing: (handler: OuterHandler) => SocketEventTarget;
@@ -66,11 +66,11 @@ export type MockedSocketIoClientApi = {
 export type MockedSocketIoContextClient = {
   getAttributes: () => SocketAttributes;
   getAttribute: <K extends SocketAttributeKey>(
-    key: K
+    key: K,
   ) => SocketAttributeValue<K>;
   mockAttribute: <K extends SocketAttributeKey>(
     key: K,
-    value: SocketAttributeValue<K>
+    value: SocketAttributeValue<K>,
   ) => SocketEventTarget;
 
   // Updated methods to better match MockedSocketIoClientApi
@@ -82,7 +82,7 @@ export type MockedSocketIoContextClient = {
   mockTimeout: (timeout: number) => SocketEventTarget;
   mockSend: (
     data: any,
-    callback?: (response: any) => void
+    callback?: (response: any) => void,
   ) => SocketEventTarget | Promise<void>;
   mockEmit: <T extends string = string>(
     eventKey: T,
@@ -100,13 +100,13 @@ export type MockedSocketIoContextClient = {
   mockOffAnyOutgoing: (handler: OuterHandler) => SocketEventTarget;
   mockOn: <T extends string = string>(
     event: T,
-    handler: OuterHandler
+    handler: OuterHandler,
   ) => SocketEventTarget;
   mockOnAnyIncoming: (handler: OuterHandler) => SocketEventTarget;
   mockOnAnyOutgoing: (handler: OuterHandler) => SocketEventTarget;
   mockOnce: <T extends string = string>(
     event: T,
-    handler: OuterHandler
+    handler: OuterHandler,
   ) => SocketEventTarget;
   mockPrependAnyIncoming: (handler: OuterHandler) => SocketEventTarget;
   mockPrependAnyOutgoing: (handler: OuterHandler) => SocketEventTarget;

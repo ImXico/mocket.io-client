@@ -14,7 +14,7 @@ type AnyEventHandlerRegistry = Map<
 export class SocketEventManagerCatchAll {
   constructor(
     private clientEventTarget: SocketEventTarget,
-    private serverEventTarget: SocketEventTarget
+    private serverEventTarget: SocketEventTarget,
   ) {}
 
   private readonly anyIncomingHandlerRegistry: AnyEventHandlerRegistry =
@@ -103,7 +103,7 @@ export class SocketEventManagerCatchAll {
       if (handlerEntry) {
         this.clientEventTarget.removeEventListener(
           CATCH_ALL_EVENT_TYPE,
-          handlerEntry.innerHandler
+          handlerEntry.innerHandler,
         );
 
         this.anyIncomingHandlerRegistry.delete(handler);
@@ -114,7 +114,7 @@ export class SocketEventManagerCatchAll {
     this.anyIncomingHandlerRegistry.forEach((entry) => {
       this.clientEventTarget.removeEventListener(
         CATCH_ALL_EVENT_TYPE,
-        entry.innerHandler
+        entry.innerHandler,
       );
     });
 
@@ -130,7 +130,7 @@ export class SocketEventManagerCatchAll {
       if (handlerEntry) {
         this.serverEventTarget.removeEventListener(
           CATCH_ALL_EVENT_TYPE,
-          handlerEntry.innerHandler
+          handlerEntry.innerHandler,
         );
 
         this.anyOutgoingHandlerRegistry.delete(handler);
@@ -141,7 +141,7 @@ export class SocketEventManagerCatchAll {
     this.anyOutgoingHandlerRegistry.forEach((entry) => {
       this.serverEventTarget.removeEventListener(
         CATCH_ALL_EVENT_TYPE,
-        entry.innerHandler
+        entry.innerHandler,
       );
     });
 
@@ -175,7 +175,7 @@ export class SocketEventManagerCatchAll {
     // For now, we can unshift to anyListeners array instead of push
     this.clientEventTarget.prependEventListener(
       CATCH_ALL_EVENT_TYPE,
-      innerHandler
+      innerHandler,
     );
 
     return this.clientEventTarget;
@@ -216,7 +216,7 @@ export class SocketEventManagerCatchAll {
     // Use prependEventListener instead of addEventListener
     this.serverEventTarget.prependEventListener(
       CATCH_ALL_EVENT_TYPE,
-      innerHandler
+      innerHandler,
     );
 
     // Return the client for chaining

@@ -15,22 +15,22 @@ export class MockedSocketIoContext {
   private readonly serverEventTarget = new SocketEventTarget();
 
   private readonly attributeManager = new SocketAttributeManager(
-    this.clientEventTarget
+    this.clientEventTarget,
   );
 
   private readonly eventManager = new SocketEventManager(
-    this.clientEventTarget
+    this.clientEventTarget,
   );
 
   private readonly eventManagerCatchAll = new SocketEventManagerCatchAll(
     this.clientEventTarget,
-    this.serverEventTarget
+    this.serverEventTarget,
   );
 
   private readonly emitManager = new SocketEmitManager(
     this.clientEventTarget,
     this.serverEventTarget,
-    this.attributeManager.getAttributes()
+    this.attributeManager.getAttributes(),
   );
 
   public readonly client = {

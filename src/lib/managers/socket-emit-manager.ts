@@ -29,7 +29,7 @@ type ReservedServerEvent =
  * @returns True if the event key is a reserved event from the server, false otherwise.
  */
 const isReservedEventFromServer = (
-  eventKey: string
+  eventKey: string,
 ): eventKey is ReservedServerEvent => {
   return (
     eventKey === RESERVED_SERVER_EVENTS.connect ||
@@ -57,17 +57,17 @@ export class SocketEmitManager {
   constructor(
     private clientEventTarget: SocketEventTarget,
     private serverEventTarget: SocketEventTarget,
-    private clientSocketAttributes: SocketAttributes
+    private clientSocketAttributes: SocketAttributes,
   ) {}
 
   public emitFromClient = <T extends string = string>(
     eventKey: T,
-    args?: any[]
+    args?: any[],
   ): SocketEventTarget => {
     this.serverEventTarget.dispatchEvent(
       new CustomEvent(eventKey, {
         detail: args,
-      })
+      }),
     );
 
     return this.clientEventTarget;
@@ -99,7 +99,7 @@ export class SocketEmitManager {
             args,
             ackId,
           },
-        })
+        }),
       );
     });
   };
@@ -107,7 +107,7 @@ export class SocketEmitManager {
   // 'send' is a shorthand for emitting a 'message' event
   public send = (
     data: any,
-    callback?: (response: any) => void
+    callback?: (response: any) => void,
   ): SocketEventTarget | Promise<void> => {
     if (callback) {
       return this.emitFromClientWithAck("message", data).then(callback);
@@ -117,7 +117,7 @@ export class SocketEmitManager {
   };
 
   private emitReservedFromServer = (
-    eventKey: ReservedServerEvent
+    eventKey: ReservedServerEvent,
   ): SocketEventTarget => {
     if (eventKey === "connect") {
       this.clientSocketAttributes.connected = true;
@@ -141,13 +141,13 @@ export class SocketEmitManager {
 
   private emitCustomFromServer = <T extends string = string>(
     eventKey: T,
-    args?: any[]
+    args?: any[],
   ): SocketEventTarget => {
     console.log("MOCK EMIT CUSTOM FROM SERVER", eventKey, args);
     this.clientEventTarget.dispatchEvent(
       new CustomEvent(eventKey, {
         detail: args,
-      })
+      }),
     );
 
     return this.serverEventTarget;
@@ -155,7 +155,7 @@ export class SocketEmitManager {
 
   public emitFromServer = <T extends string = string>(
     eventKey: T,
-    args?: any[]
+    args?: any[],
   ): SocketEventTarget => {
     return isReservedEventFromServer(eventKey)
       ? this.emitReservedFromServer(eventKey)
@@ -164,14 +164,14 @@ export class SocketEmitManager {
 
   public acknowledgeClientEvent = (
     ackId: string,
-    response: any
+    response: any,
   ): SocketEventTarget => {
     // Acknowledge on the server, which will trigger the resolve of
     // the promise on the client side (in `mockEmitFromClientWithAck`).
     this.serverEventTarget.dispatchEvent(
       new CustomEvent(ackId, {
         detail: response,
-      })
+      }),
     );
 
     return this.serverEventTarget;

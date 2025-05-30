@@ -48,7 +48,7 @@ export class SocketEventManager {
 
   public once = (
     eventKey: string,
-    handler: OuterHandler
+    handler: OuterHandler,
   ): SocketEventTarget => {
     if (!this.handlerRegistry.has(eventKey)) {
       this.handlerRegistry.set(eventKey, new Map());
@@ -87,7 +87,7 @@ export class SocketEventManager {
     if (handlerEntry) {
       this.clientEventTarget.removeEventListener(
         eventKey,
-        handlerEntry.innerHandler
+        handlerEntry.innerHandler,
       );
 
       eventHandlers.delete(handler);

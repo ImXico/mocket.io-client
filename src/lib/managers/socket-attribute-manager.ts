@@ -60,14 +60,14 @@ export class SocketAttributeManager {
   };
 
   public getAttribute = <K extends SocketAttributeKey>(
-    key: K
+    key: K,
   ): SocketAttributeValue<K> => {
     return this.attributes[key];
   };
 
   public mockAttribute = <K extends SocketAttributeKey>(
     key: K,
-    value: SocketAttributeValue<K>
+    value: SocketAttributeValue<K>,
   ): SocketEventTarget => {
     this.attributes[key] = value;
     return this.clientEventTarget;

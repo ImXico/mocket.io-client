@@ -4,7 +4,7 @@ import { vi } from "vitest";
 
 export const mockSocketIo = (
   io: unknown,
-  context: MockedSocketIoContext
+  context: MockedSocketIoContext,
 ): MockedSocketIo => {
   const socketFactory = () => {
     return {

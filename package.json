@@ -8,7 +8,9 @@
     "test": "vitest",
     "test:examples": "vitest --config examples/vitest.examples.config.ts",
     "build": "vite build",
-    "print-paths": "node -e 'console.log(module.paths)'"
+    "print-paths": "node -e 'console.log(module.paths)'",
+    "prettier:check": "prettier --check .",
+    "prettier:fix": "prettier --write ."
   },
   "keywords": [],
   "author": "",
@@ -16,7 +18,8 @@
   "devDependencies": {
     "typescript": "^5.8.2",
     "vite": "^4.0.0",
-    "vitest": "^3.0.8"
+    "vitest": "^3.0.8",
+    "prettier": "^3.5.3"
   },
   "peerDependencies": {
     "socket.io-client": "^4.8.1"

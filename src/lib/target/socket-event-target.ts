@@ -15,7 +15,7 @@ export class SocketEventTarget extends EventTarget {
   addEventListener(
     type: string,
     listener: EventListener,
-    options?: AddEventListenerOptions
+    options?: AddEventListenerOptions,
   ): void {
     super.addEventListener(type, listener, options);
 
@@ -35,7 +35,7 @@ export class SocketEventTarget extends EventTarget {
   removeEventListener(
     type: string,
     listener: EventListener,
-    options?: EventListenerOptions
+    options?: EventListenerOptions,
   ): void {
     super.removeEventListener(type, listener, options);
 

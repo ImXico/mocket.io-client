@@ -1,8 +1,6 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect } from "vitest";
 import { LiveCounter } from "./client";
-
 import { io } from "socket.io-client";
-import { MockedSocketIo } from "../src/lib/types";
 import { itWithMockedIoContext } from "../src/runners/vitest.setup";
 
 describe("client tests", () => {
@@ -34,7 +32,7 @@ describe("client tests", () => {
       // server.mockCloseConnection()
       // expect(client.emissions).toEqual(0);
       // also detect/? broken/closed connections?
-    }
+    },
   );
 
   // it("emit three times", async ({ mockedSocketContext }) => {

@@ -35,7 +35,7 @@ export class LiveCounter {
         this.value,
         (receivedAtAck: string) => {
           this._lastAckFromServerAt = receivedAtAck;
-        }
+        },
       );
     });
   }
