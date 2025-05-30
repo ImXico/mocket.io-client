@@ -1,3 +1,8 @@
+import {
+  SocketAttributeKey,
+  SocketAttributes,
+  SocketAttributeValue,
+} from "./managers";
 import { SocketEventTarget } from "./target/socket-event-target";
 
 /**
@@ -10,7 +15,7 @@ export type InnerHandler = (event: Event) => void;
  */
 export type OuterHandler = (...args: any[]) => void;
 
-export type MockedSocketIo = {
+export type MockedSocketIoClientApi = {
   connected: boolean;
   disconnected: boolean;
   recovered: boolean;
@@ -58,40 +63,69 @@ export type MockedSocketIo = {
  * The type of the socket.io client.
  * This is a subset of the actual socket.io client API.
  */
-// export type MockSocketClient = {
-//   connected: boolean;
-//   disconnected: boolean;
-//   recovered: boolean;
-//   active: boolean;
-//   id: string | null;
-//   open: () => void;
-//   close: () => void;
-//   connect: () => void;
-//   disconnect: () => void;
-//   compress: (compress: boolean) => void;
-//   timeout: (timeout: number) => void;
-//   send: (data: any) => void;
-//   emit: (event: string, ...args: any[]) => void;
-//   emitWithAck: (event: string, ...args: any[]) => Promise<any>;
-//   listeners: (event: string) => OuterHandler[];
-//   listenersAny: (event: string) => OuterHandler[];
-//   listenersAnyOutgoing: (event: string) => OuterHandler[];
-//   off: (event: string, handler?: OuterHandler) => void;
-//   offAny: (event: string, handler?: OuterHandler) => void;
-//   offAnyOutgoing: (event: string, handler?: OuterHandler) => void;
-//   on: (event: string, handler: OuterHandler) => void;
-//   onAny: (event: string, handler: OuterHandler) => void;
-//   onAnyOutgoing: (event: string, handler: OuterHandler) => void;
-//   once: (event: string, handler: OuterHandler) => void;
-//   prependAny: (event: string, handler: OuterHandler) => void;
-//   prependAnyOutgoing: (event: string, handler: OuterHandler) => void;
-// };
+export type MockedSocketIoContextClient = {
+  getAttributes: () => SocketAttributes;
+  getAttribute: <K extends SocketAttributeKey>(
+    key: K
+  ) => SocketAttributeValue<K>;
+  mockAttribute: <K extends SocketAttributeKey>(
+    key: K,
+    value: SocketAttributeValue<K>
+  ) => SocketEventTarget;
 
-// /**
-//  * The type of the socket.io server.
-//  * This is a subset of the actual socket.io server API.
-//  */
-// export type MockSocketServer = {
-//   mockEmit: (event: string, ...args: any[]) => void;
-//   mockAcknowledgeClientEvent: (ackId: string, response: any) => void;
-// };
+  // Updated methods to better match MockedSocketIoClientApi
+  mockOpen: () => SocketEventTarget;
+  mockClose: () => SocketEventTarget;
+  mockConnect: () => SocketEventTarget;
+  mockDisconnect: () => SocketEventTarget;
+  mockCompress: (value: boolean) => SocketEventTarget;
+  mockTimeout: (timeout: number) => SocketEventTarget;
+  mockSend: (
+    data: any,
+    callback?: (response: any) => void
+  ) => SocketEventTarget | Promise<void>;
+  mockEmit: <T extends string = string>(
+    eventKey: T,
+    ...args: any[]
+  ) => SocketEventTarget;
+  mockEmitWithAck: <T extends string = string>(
+    eventKey: T,
+    ...args: any[]
+  ) => Promise<any>;
+  mockListeners: (event: string) => OuterHandler[];
+  mockListenersAnyIncoming: () => OuterHandler[];
+  mockListenersAnyOutgoing: () => OuterHandler[];
+  mockOff: (eventKey: string, handler: OuterHandler) => SocketEventTarget;
+  mockOffAnyIncoming: (handler: OuterHandler) => SocketEventTarget;
+  mockOffAnyOutgoing: (handler: OuterHandler) => SocketEventTarget;
+  mockOn: <T extends string = string>(
+    event: T,
+    handler: OuterHandler
+  ) => SocketEventTarget;
+  mockOnAnyIncoming: (handler: OuterHandler) => SocketEventTarget;
+  mockOnAnyOutgoing: (handler: OuterHandler) => SocketEventTarget;
+  mockOnce: <T extends string = string>(
+    event: T,
+    handler: OuterHandler
+  ) => SocketEventTarget;
+  mockPrependAnyIncoming: (handler: OuterHandler) => SocketEventTarget;
+  mockPrependAnyOutgoing: (handler: OuterHandler) => SocketEventTarget;
+};
+
+/**
+ * The type of the socket.io server.
+ * This is a subset of the actual socket.io server API.
+ */
+export type MockSocketIoContextMinimalServer = {
+  mockEmit: (event: string, ...args: any[]) => void;
+  mockAcknowledgeClientEvent: (ackId: string, response: any) => void;
+};
+
+/**
+ * The type of the mocked Socket.io context.
+ * This is used to mock the Socket.io client and server in tests.
+ */
+export type MockedSocketIo = {
+  client: MockedSocketIoContextClient;
+  server: MockSocketIoContextMinimalServer;
+};
