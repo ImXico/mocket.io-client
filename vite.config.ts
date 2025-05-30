@@ -9,7 +9,7 @@ export default defineConfig({
   plugins: [dts({ rollupTypes: true })],
   build: {
     lib: {
-      entry: resolve(__dirname, "./index.js"),
+      entry: resolve(__dirname, "./index.ts"),
       name: "MyLib",
       // the proper extensions will be added
       fileName: "index",

@@ -3,7 +3,7 @@ import { coverageConfigDefaults, defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     globals: true,
-    setupFiles: ["./vitest.global-mocks.ts"],
+    setupFiles: ["src/runners/vitest.setup.ts"],
     coverage: {
       exclude: [
         ...coverageConfigDefaults.exclude, // See https://github.com/vitest-dev/vitest/issues/5101
@@ -11,6 +11,5 @@ export default defineConfig({
         "src/**/*.d.ts", // Exclude TypeScript declaration files
       ],
     },
-    // css: true,
   },
 });
