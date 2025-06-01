@@ -77,6 +77,7 @@ export class SocketAttributeManager {
 
   public connect = (): SocketEventTarget => {
     this.attributes.connected = true;
+    this.attributes.disconnected = false;
     return this.clientEventTarget;
   };
 
