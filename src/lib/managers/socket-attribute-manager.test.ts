@@ -35,11 +35,13 @@ describe("SocketAttributeManager", () => {
   });
 
   it("should handle connection state changes", () => {
-    expect(manager.connect()).toBe(eventTarget);
+    const connectResult = manager.connect();
+    expect(connectResult).toBe(eventTarget);
     expect(manager.getAttribute("connected")).toBe(true);
     expect(manager.getAttribute("disconnected")).toBe(false);
 
-    expect(manager.disconnect()).toBe(eventTarget);
+    const disconnectResult = manager.disconnect();
+    expect(disconnectResult).toBe(eventTarget);
     expect(manager.getAttribute("connected")).toBe(false);
     expect(manager.getAttribute("disconnected")).toBe(true);
     expect(manager.getAttribute("id")).toBeUndefined();
@@ -54,12 +56,18 @@ describe("SocketAttributeManager", () => {
   });
 
   it("should set timeout attribute", () => {
-    expect(manager.timeout(5000)).toBe(eventTarget);
+    const timeoutResult = manager.timeout(5000);
+    expect(timeoutResult).toBe(eventTarget);
     expect(manager.getAttribute("timeout")).toBe(5000);
   });
 
   it("should set compress attribute", () => {
-    expect(manager.compress(false)).toBe(eventTarget);
+    const compressTrueResult = manager.compress(true);
+    expect(compressTrueResult).toBe(eventTarget);
+    expect(manager.getAttribute("compress")).toBe(true);
+
+    const compressFalseResult = manager.compress(false);
+    expect(compressFalseResult).toBe(eventTarget);
     expect(manager.getAttribute("compress")).toBe(false);
   });
 });
