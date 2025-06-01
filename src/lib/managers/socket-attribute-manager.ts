@@ -1,3 +1,4 @@
+import { Manager } from "socket.io-client";
 import { SocketEventTarget } from "../target/socket-event-target";
 
 /**
@@ -14,6 +15,7 @@ export type SocketAttributes = {
   id: string | undefined;
   timeout?: number;
   compress?: boolean;
+  io: Manager | null;
 };
 
 /**
@@ -52,7 +54,7 @@ export class SocketAttributeManager {
     id: undefined,
     timeout: undefined,
     compress: true,
-    // io: TODO
+    io: null,
   };
 
   public getAttributes = (): SocketAttributes => {
