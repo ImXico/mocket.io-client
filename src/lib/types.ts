@@ -72,8 +72,6 @@ export type MockedSocketIoContextClient = {
     key: K,
     value: SocketAttributeValue<K>,
   ) => SocketEventTarget;
-
-  // Updated methods to better match MockedSocketIoClientApi
   mockOpen: () => SocketEventTarget;
   mockClose: () => SocketEventTarget;
   mockConnect: () => SocketEventTarget;
