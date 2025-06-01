@@ -1,7 +1,6 @@
 import { vi } from "vitest";
 import { io } from "socket.io-client";
 import { test as baseTest } from "vitest";
-
 import { mockSocketIo } from "../lib/socket-io.mock-environment";
 import { MockedSocketIoContext } from "../lib/socket-io.mocked-context";
 import { MockedSocketIo } from "../lib/types";
