@@ -60,22 +60,41 @@ export class SocketEmitManager {
     private clientSocketAttributes: SocketAttributes,
   ) {}
 
-  public emitFromClient = <T extends string = string>(
-    eventKey: T,
-    args?: any[],
+  public emitFromClient = <
+    EventType extends string = string,
+    ArgsType extends any[] = any[],
+  >(
+    eventKey: EventType,
+    ...args: ArgsType
   ): SocketEventTarget => {
-    this.serverEventTarget.dispatchEvent(
-      new CustomEvent(eventKey, {
-        detail: args,
-      }),
-    );
+    // Check if the last argument is a function (acknowledgment callback)
+    const lastArg = args.length > 0 ? args[args.length - 1] : undefined;
+    const hasAck = typeof lastArg === "function";
+
+    if (hasAck) {
+      // If has callback, use the promise-based method internally
+      const callback = args.pop();
+      this.emitFromClientWithAck(eventKey, ...args)
+        .then((response) => callback(response))
+        .catch((error) => console.error("Acknowledgment error:", error));
+    } else {
+      // Regular emit without acknowledgment
+      this.serverEventTarget.dispatchEvent(
+        new CustomEvent(eventKey, {
+          detail: args.length > 0 ? args : undefined,
+        }),
+      );
+    }
 
     return this.clientEventTarget;
   };
 
-  public emitFromClientWithAck = <T extends string = string>(
-    eventKey: T,
-    ...args: any[]
+  public emitFromClientWithAck = <
+    EventType extends string = string,
+    ArgsType extends any[] = any[],
+  >(
+    eventKey: EventType,
+    ...args: ArgsType
   ): Promise<any> => {
     // Return a promise that will be resolved when the server sends an acknowledgment
     return new Promise<any>((resolve) => {
@@ -105,15 +124,18 @@ export class SocketEmitManager {
   };
 
   // 'send' is a shorthand for emitting a 'message' event
-  public send = (
-    data: any,
-    callback?: (response: any) => void,
-  ): SocketEventTarget | Promise<void> => {
-    if (callback) {
-      return this.emitFromClientWithAck("message", data).then(callback);
+  public send = <ArgsType extends any[] = any[]>(
+    ...args: any[]
+  ): SocketEventTarget => {
+    const lastArg = args.length > 1 ? args[args.length - 1] : undefined;
+    const hasAck = typeof lastArg === "function";
+
+    if (hasAck) {
+      const callback = args.pop();
+      return this.emitFromClient("message", ...args, callback);
     }
 
-    return this.emitFromClient("message", [data]);
+    return this.emitFromClient("message", ...args);
   };
 
   private emitReservedFromServer = (
@@ -143,7 +165,6 @@ export class SocketEmitManager {
     eventKey: T,
     args?: any[],
   ): SocketEventTarget => {
-    console.log("MOCK EMIT CUSTOM FROM SERVER", eventKey, args);
     this.clientEventTarget.dispatchEvent(
       new CustomEvent(eventKey, {
         detail: args,
@@ -153,9 +174,12 @@ export class SocketEmitManager {
     return this.serverEventTarget;
   };
 
-  public emitFromServer = <T extends string = string>(
-    eventKey: T,
-    args?: any[],
+  public emitFromServer = <
+    EventType extends string = string,
+    ArgsType extends any[] = any[],
+  >(
+    eventKey: EventType,
+    ...args: ArgsType
   ): SocketEventTarget => {
     return isReservedEventFromServer(eventKey)
       ? this.emitReservedFromServer(eventKey)
