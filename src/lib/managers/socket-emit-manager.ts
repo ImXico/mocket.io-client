@@ -161,9 +161,12 @@ export class SocketEmitManager {
     return this.serverEventTarget;
   };
 
-  private emitCustomFromServer = <T extends string = string>(
-    eventKey: T,
-    args?: any[],
+  private emitCustomFromServer = <
+    EventType extends string = string,
+    ArgsType extends any[] = any[],
+  >(
+    eventKey: EventType,
+    ...args: ArgsType
   ): SocketEventTarget => {
     this.clientEventTarget.dispatchEvent(
       new CustomEvent(eventKey, {
