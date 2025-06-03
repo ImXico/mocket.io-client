@@ -56,7 +56,6 @@ export class SocketEventManager {
 
     const innerHandler = (event: Event) => {
       if (isCustomEvent(event)) {
-        // After handling once, remove the handler.
         this.off(eventKey, handler);
 
         return Array.isArray(event.detail)
