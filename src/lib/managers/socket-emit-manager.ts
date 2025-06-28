@@ -60,6 +60,10 @@ export class SocketEmitManager {
     private clientSocketAttributes: SocketAttributes,
   ) {}
 
+  private formatEventDetail = (args: any[]): any => {
+    return args.length === 0 ? undefined : args.length === 1 ? args[0] : args;
+  };
+
   public emitFromClient = <
     EventType extends string = string,
     ArgsType extends any[] = any[],
@@ -72,16 +76,46 @@ export class SocketEmitManager {
     const hasAck = typeof lastArg === "function";
 
     if (hasAck) {
-      // If has callback, use the promise-based method internally
       const callback = args.pop();
-      this.emitFromClientWithAck(eventKey, ...args)
-        .then((response) => callback(response))
-        .catch((error) => console.error("Acknowledgment error:", error));
+      const ackId = genUniqueAckId();
+
+      // Set up a one-time event listener for the acknowledgment response
+      const ackListener = (event: Event) => {
+        if (
+          isCustomEvent(event) &&
+          event.detail &&
+          event.detail.ackId === ackId
+        ) {
+          if (Array.isArray(event.detail.args)) {
+            callback(...event.detail.args);
+          } else {
+            // Fallback for single argument or non-array case
+            callback(event.detail.args);
+          }
+
+          // Remove the listener after it's been called
+          this.serverEventTarget.removeEventListener(
+            `${eventKey}:ack`,
+            ackListener,
+          );
+        }
+      };
+
+      // Setup a listener for the acknowledgment response
+      this.serverEventTarget.addEventListener(`${eventKey}:ack`, ackListener);
+
+      // Emit the event with the args and ackId
+      this.serverEventTarget.dispatchEvent(
+        new CustomEvent(`${eventKey}:ack`, {
+          detail: [...args, ackId],
+        }),
+      );
     } else {
       // Regular emit without acknowledgment
       this.serverEventTarget.dispatchEvent(
         new CustomEvent(eventKey, {
-          detail: args.length > 0 ? args : undefined,
+          detail:
+            args.length === 0 ? undefined : args.length === 1 ? args[0] : args,
         }),
       );
     }
@@ -96,28 +130,51 @@ export class SocketEmitManager {
     eventKey: EventType,
     ...args: ArgsType
   ): Promise<any> => {
-    // Return a promise that will be resolved when the server sends an acknowledgment
     return new Promise<any>((resolve) => {
+      // Check if the last argument is a function (acknowledgment callback)
+      const lastArg = args.length > 0 ? args[args.length - 1] : undefined;
+      const hasCallback = typeof lastArg === "function";
+
+      // Extract the callback if present, otherwise it's undefined
+      const callback = hasCallback ? (args.pop() as Function) : undefined;
+
       const ackId = genUniqueAckId();
 
-      // Set up a one-time event listener for the acknowledgment response.
+      // Set up a one-time event listener for the acknowledgment response
       const ackListener = (event: Event) => {
-        if (isCustomEvent(event)) {
-          resolve(event.detail);
-          this.serverEventTarget.removeEventListener(ackId, ackListener);
+        if (
+          isCustomEvent(event) &&
+          event.detail &&
+          event.detail.ackId === ackId
+        ) {
+          // Handle multiple arguments
+          const responseArgs = Array.isArray(event.detail.args)
+            ? event.detail.args
+            : [event.detail.args];
+
+          // Resolve the promise with the first argument or the whole array if needed
+          resolve(responseArgs.length === 1 ? responseArgs[0] : responseArgs);
+
+          // Also call the callback if provided, passing all arguments
+          if (typeof callback === "function") {
+            callback(...responseArgs);
+          }
+
+          // Remove the listener after it's been called
+          this.serverEventTarget.removeEventListener(
+            `${eventKey}:ack`,
+            ackListener,
+          );
         }
       };
 
-      // Setup a listener for the acknowledgment response.
-      this.serverEventTarget.addEventListener(ackId, ackListener);
+      // Setup a listener for the acknowledgment response
+      this.serverEventTarget.addEventListener(`${eventKey}:ack`, ackListener);
 
-      // Emit the event with the additional ackId parameter.
+      // Emit the event with the args and ackId
       this.serverEventTarget.dispatchEvent(
-        new CustomEvent(eventKey, {
-          detail: {
-            args,
-            ackId,
-          },
+        new CustomEvent(`${eventKey}:ack`, {
+          detail: [...args, ackId],
         }),
       );
     });
@@ -168,9 +225,13 @@ export class SocketEmitManager {
     eventKey: EventType,
     ...args: ArgsType
   ): SocketEventTarget => {
+    // If there's only one argument, don't wrap it in an array
+    // This would make single-argument emissions cleaner
+    const detail = args.length === 1 ? args[0] : args;
+
     this.clientEventTarget.dispatchEvent(
       new CustomEvent(eventKey, {
-        detail: args,
+        detail,
       }),
     );
 
@@ -186,19 +247,56 @@ export class SocketEmitManager {
   ): SocketEventTarget => {
     return isReservedEventFromServer(eventKey)
       ? this.emitReservedFromServer(eventKey)
-      : this.emitCustomFromServer(eventKey, args);
+      : this.emitCustomFromServer(eventKey, ...args);
   };
 
-  public acknowledgeClientEvent = (
-    ackId: string,
-    response: any,
+  public serverOn = <EventType extends string = string>(
+    eventKey: EventType,
+    handler: (...args: any[]) => any,
   ): SocketEventTarget => {
-    // Acknowledge on the server, which will trigger the resolve of
-    // the promise on the client side (in `mockEmitFromClientWithAck`).
-    this.serverEventTarget.dispatchEvent(
-      new CustomEvent(ackId, {
-        detail: response,
-      }),
+    // Listen for both regular events and those with acknowledgement
+    const regularEventListener = (event: Event) => {
+      if (isCustomEvent(event)) {
+        // Regular event without acknowledgement
+        const args = Array.isArray(event.detail)
+          ? event.detail
+          : [event.detail];
+        handler(...args);
+      }
+    };
+
+    const ackEventListener = (event: Event) => {
+      if (isCustomEvent(event)) {
+        // Event with acknowledgement
+        if (!Array.isArray(event.detail)) return;
+
+        // The last item in detail should be the ackId
+        const args = [...event.detail];
+        const ackId = args.pop();
+
+        // Create a callback that will trigger the acknowledgement
+        const callback = (...args: any[]) => {
+          this.serverEventTarget.dispatchEvent(
+            new CustomEvent(`${eventKey}:ack`, {
+              detail: {
+                ackId,
+                args, // Pass all arguments as an array
+              },
+            }),
+          );
+        };
+
+        // Add the callback to the arguments and call the handler
+        args.push(callback);
+        handler(...args);
+      }
+    };
+
+    // Set up listeners for both regular events and those with ack
+    this.serverEventTarget.addEventListener(eventKey, regularEventListener);
+    this.serverEventTarget.addEventListener(
+      `${eventKey}:ack`,
+      ackEventListener,
     );
 
     return this.serverEventTarget;
