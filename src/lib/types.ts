@@ -39,20 +39,20 @@ export type MockedSocketIoClientApi = {
     eventKey: T,
     ...args: any[]
   ) => Promise<any>;
-  listeners: (event: string) => OuterHandler[];
+  listeners: (eventKey: string) => OuterHandler[];
   listenersAny: () => OuterHandler[];
   listenersAnyOutgoing: () => OuterHandler[];
   off: (eventKey: string, handler: OuterHandler) => SocketEventTarget;
   offAny: (handler: OuterHandler) => SocketEventTarget;
   offAnyOutgoing: (handler: OuterHandler) => SocketEventTarget;
   on: <T extends string = string>(
-    event: T,
+    eventKey: T,
     handler: OuterHandler,
   ) => SocketEventTarget;
   onAny: (handler: OuterHandler) => SocketEventTarget;
   onAnyOutgoing: (handler: OuterHandler) => SocketEventTarget;
   once: <T extends string = string>(
-    event: T,
+    eventKey: T,
     handler: OuterHandler,
   ) => SocketEventTarget;
   prependAny: (handler: OuterHandler) => SocketEventTarget;
@@ -90,20 +90,20 @@ export type MockedSocketIoContextClient = {
     eventKey: T,
     ...args: any[]
   ) => Promise<any>;
-  mockListeners: (event: string) => OuterHandler[];
+  mockListeners: (eventKey: string) => OuterHandler[];
   mockListenersAnyIncoming: () => OuterHandler[];
   mockListenersAnyOutgoing: () => OuterHandler[];
   mockOff: (eventKey: string, handler: OuterHandler) => SocketEventTarget;
   mockOffAnyIncoming: (handler: OuterHandler) => SocketEventTarget;
   mockOffAnyOutgoing: (handler: OuterHandler) => SocketEventTarget;
   mockOn: <T extends string = string>(
-    event: T,
+    eventKey: T,
     handler: OuterHandler,
   ) => SocketEventTarget;
   mockOnAnyIncoming: (handler: OuterHandler) => SocketEventTarget;
   mockOnAnyOutgoing: (handler: OuterHandler) => SocketEventTarget;
   mockOnce: <T extends string = string>(
-    event: T,
+    eventKey: T,
     handler: OuterHandler,
   ) => SocketEventTarget;
   mockPrependAnyIncoming: (handler: OuterHandler) => SocketEventTarget;
@@ -115,8 +115,8 @@ export type MockedSocketIoContextClient = {
  * This is a subset of the actual socket.io server API.
  */
 export type MockSocketIoContextMinimalServer = {
-  mockEmit: (event: string, ...args: any[]) => void;
-  mockAcknowledgeClientEvent: (ackId: string, response: any) => void;
+  mockEmit: (eventKey: string, ...args: any[]) => void;
+  mockOn: (eventKey: string, handler: (...args: any[]) => any) => void;
 };
 
 /**
