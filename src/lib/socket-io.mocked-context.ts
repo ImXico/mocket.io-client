@@ -20,6 +20,7 @@ export class MockedSocketIoContext {
 
   private readonly eventManager = new SocketEventManager(
     this.clientEventTarget,
+    this.serverEventTarget,
   );
 
   private readonly eventManagerCatchAll = new SocketEventManagerCatchAll(
@@ -52,7 +53,7 @@ export class MockedSocketIoContext {
     mockOff: this.eventManager.off,
     mockOffAnyIncoming: this.eventManagerCatchAll.offAnyIncoming,
     mockOffAnyOutgoing: this.eventManagerCatchAll.offAnyOutgoing,
-    mockOn: this.eventManager.on,
+    mockOn: this.eventManager.clientOn,
     mockOnAnyIncoming: this.eventManagerCatchAll.onAnyIncoming,
     mockOnAnyOutgoing: this.eventManagerCatchAll.onAnyOutgoing,
     mockOnce: this.eventManager.once,
@@ -62,6 +63,6 @@ export class MockedSocketIoContext {
 
   public readonly server = {
     mockEmit: this.emitManager.emitFromServer,
-    mockAcknowledgeClientEvent: this.emitManager.acknowledgeClientEvent,
+    mockOn: this.emitManager.serverOn,
   } satisfies MockSocketIoContextMinimalServer;
 }
