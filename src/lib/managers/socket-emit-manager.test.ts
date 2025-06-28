@@ -48,6 +48,7 @@ describe("SocketEmitManager", () => {
       serverEventTarget.addEventListener("test-event-ack", (event) => {
         if (isCustomEvent(event) && event.detail && event.detail.ackId) {
           manager.acknowledgeClientEvent(
+            "promise-ack-event",
             event.detail.ackId,
             acknowledgeResponse,
           );
@@ -71,6 +72,7 @@ describe("SocketEmitManager", () => {
       serverEventTarget.addEventListener("promise-ack-event", (event) => {
         if (isCustomEvent(event) && event.detail && event.detail.ackId) {
           manager.acknowledgeClientEvent(
+            "promise-ack-event",
             event.detail.ackId,
             acknowledgeResponse,
           );
@@ -106,6 +108,7 @@ describe("SocketEmitManager", () => {
       serverEventTarget.addEventListener("message", (event) => {
         if (isCustomEvent(event) && event.detail && event.detail.ackId) {
           manager.acknowledgeClientEvent(
+            "promise-ack-event",
             event.detail.ackId,
             acknowledgeResponse,
           );
@@ -166,13 +169,14 @@ describe("SocketEmitManager", () => {
 
   describe("acknowledgeClientEvent", () => {
     it("should dispatch an event with the provided response", () => {
+      const eventKey = "test-event";
       const ackId = "test-ack-id";
       const response = { success: true };
       const serverListener = vi.fn();
 
-      serverEventTarget.addEventListener(ackId, serverListener);
+      serverEventTarget.addEventListener(eventKey, serverListener);
 
-      manager.acknowledgeClientEvent(ackId, response);
+      manager.acknowledgeClientEvent(eventKey, ackId, response);
 
       expect(serverListener).toHaveBeenCalledTimes(1);
       const event = serverListener.mock.calls[0][0];

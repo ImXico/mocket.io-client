@@ -14,7 +14,7 @@ describe("SocketEventManager", () => {
   it("should register event listeners with on", () => {
     const handler = vi.fn();
 
-    const onResult = manager.on("test-event", handler);
+    const onResult = manager.clientOn("test-event", handler);
     expect(onResult).toBe(eventTarget);
 
     const event = new CustomEvent("test-event", { detail: ["test-data"] });
@@ -42,7 +42,7 @@ describe("SocketEventManager", () => {
   it("should remove event listeners with off", () => {
     const handler = vi.fn();
 
-    manager.on("test-event", handler);
+    manager.clientOn("test-event", handler);
     manager.off("test-event", handler);
 
     const event = new CustomEvent("test-event", { detail: ["test-data"] });
@@ -55,8 +55,8 @@ describe("SocketEventManager", () => {
     const handler1 = vi.fn();
     const handler2 = vi.fn();
 
-    manager.on("test-event", handler1);
-    manager.on("test-event", handler2);
+    manager.clientOn("test-event", handler1);
+    manager.clientOn("test-event", handler2);
 
     const listeners = manager.listeners("test-event");
     expect(listeners.length).toBe(2);
@@ -74,9 +74,9 @@ describe("SocketEventManager", () => {
     const objectHandler = vi.fn();
     const arrayHandler = vi.fn();
 
-    manager.on("number-event", numberHandler);
-    manager.on("object-event", objectHandler);
-    manager.on("array-event", arrayHandler);
+    manager.clientOn("number-event", numberHandler);
+    manager.clientOn("object-event", objectHandler);
+    manager.clientOn("array-event", arrayHandler);
 
     eventTarget.dispatchEvent(
       new CustomEvent("number-event", { detail: [42] }),

@@ -19,20 +19,30 @@ type EventHandlerRegistry = Map<
 >;
 
 export class SocketEventManager {
-  constructor(private clientEventTarget: SocketEventTarget) {}
+  constructor(
+    private clientEventTarget: SocketEventTarget,
+    private serverEventTarget: SocketEventTarget,
+  ) {}
 
   private readonly handlerRegistry: EventHandlerRegistry = new Map();
 
-  public on = (eventKey: string, handler: OuterHandler): SocketEventTarget => {
+  public clientOn = (
+    eventKey: string,
+    handler: OuterHandler,
+  ): SocketEventTarget => {
     if (!this.handlerRegistry.has(eventKey)) {
       this.handlerRegistry.set(eventKey, new Map());
     }
 
     const innerHandler = (event: Event) => {
       if (isCustomEvent(event)) {
-        return Array.isArray(event.detail)
-          ? handler(...event.detail)
-          : handler(event.detail);
+        if (Array.isArray(event.detail)) {
+          // Pass all arguments to the handler
+          return handler(...event.detail);
+        } else {
+          // Single argument case
+          return handler(event.detail);
+        }
       }
     };
 
@@ -56,11 +66,17 @@ export class SocketEventManager {
 
     const innerHandler = (event: Event) => {
       if (isCustomEvent(event)) {
+        // Remove the handler first to ensure it only runs once
         this.off(eventKey, handler);
 
-        return Array.isArray(event.detail)
-          ? handler(...event.detail)
-          : handler(event.detail);
+        // Handle array and non-array cases the same way as clientOn/serverOn
+        if (Array.isArray(event.detail)) {
+          // Pass all arguments to the handler
+          return handler(...event.detail);
+        } else {
+          // Single argument case
+          return handler(event.detail);
+        }
       }
     };
 
