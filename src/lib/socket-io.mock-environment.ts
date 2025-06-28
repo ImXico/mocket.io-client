@@ -54,7 +54,6 @@ export const mockSocketIo = (
   socketFactory.Manager = class MockManager {};
   socketFactory.Socket = class MockSocket {};
 
-  // Implement the mock using the test runner's mock function
   const mockedIo = vi.mocked(io as any);
   mockedIo.mockImplementation(() => socketFactory());
 
