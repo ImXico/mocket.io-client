@@ -19,10 +19,7 @@ type EventHandlerRegistry = Map<
 >;
 
 export class SocketEventManager {
-  constructor(
-    private clientEventTarget: SocketEventTarget,
-    private serverEventTarget: SocketEventTarget,
-  ) {}
+  constructor(private clientEventTarget: SocketEventTarget) {}
 
   private readonly handlerRegistry: EventHandlerRegistry = new Map();
 
