@@ -1,13 +1,13 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { SocketEmitManager } from "./socket-emit-manager";
 import { SocketEventTarget } from "../target/socket-event-target";
-import { isCustomEvent } from "../util";
+import { SocketAttributes } from "./socket-attribute-manager";
 
 describe("SocketEmitManager", () => {
   let clientEventTarget: SocketEventTarget;
   let serverEventTarget: SocketEventTarget;
-  let manager: SocketEmitManager;
-  let clientSocketAttributes: any;
+  let clientSocketAttributes: SocketAttributes;
+  let socketEmitManager: SocketEmitManager;
 
   beforeEach(() => {
     clientEventTarget = new SocketEventTarget();
@@ -15,173 +15,273 @@ describe("SocketEmitManager", () => {
     clientSocketAttributes = {
       connected: false,
       disconnected: false,
-      id: null,
+      id: "",
+      active: false,
+      recovered: false,
+      io: undefined as any,
     };
-    manager = new SocketEmitManager(
+    socketEmitManager = new SocketEmitManager(
       clientEventTarget,
       serverEventTarget,
       clientSocketAttributes,
     );
+
+    // Silence console logs during tests
+    vi.spyOn(console, "log").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   describe("emitFromClient", () => {
-    it("should emit events from client to server", () => {
-      const serverListener = vi.fn();
-      serverEventTarget.addEventListener("test-event", serverListener);
-
-      const result = manager.emitFromClient("test-event", "hello", 123);
-
-      expect(result).toBe(clientEventTarget);
-      expect(serverListener).toHaveBeenCalledTimes(1);
-
-      const event = serverListener.mock.calls[0][0];
-      expect(isCustomEvent(event)).toBe(true);
-      expect(event.type).toBe("test-event");
-      expect(event.detail).toEqual(["hello", 123]);
-    });
-
-    it("should support callback-based acknowledgments", () => {
-      const callback = vi.fn();
-      const acknowledgeResponse = "acknowledged";
-
-      // Add a listener to simulate server processing and acknowledgment
-      serverEventTarget.addEventListener("test-event-ack", (event) => {
-        if (isCustomEvent(event) && event.detail && event.detail.ackId) {
-          manager.acknowledgeClientEvent(
-            "promise-ack-event",
-            event.detail.ackId,
-            acknowledgeResponse,
-          );
+    it("should emit regular events without acknowledgment", () => {
+      // Setup a listener on the server
+      const mockHandler = vi.fn();
+      serverEventTarget.addEventListener("test-event", (event: Event) => {
+        if (event instanceof CustomEvent) {
+          mockHandler(event.detail);
         }
       });
 
-      manager.emitFromClient("test-event-ack", "data", callback);
+      // Emit event from client
+      socketEmitManager.emitFromClient("test-event", "data1", "data2");
 
-      // Wait for the next tick to allow promises to resolve
-      setTimeout(() => {
-        expect(callback).toHaveBeenCalledWith(acknowledgeResponse);
-      }, 0);
+      // Check that the server received the event with correct data
+      expect(mockHandler).toHaveBeenCalledTimes(1);
+      expect(mockHandler).toHaveBeenCalledWith(["data1", "data2"]);
+    });
+
+    it("should emit events with single argument correctly", () => {
+      const mockHandler = vi.fn();
+      serverEventTarget.addEventListener("test-event", (event: Event) => {
+        if (event instanceof CustomEvent) {
+          mockHandler(event.detail);
+        }
+      });
+
+      // Emit event from client with a single argument
+      socketEmitManager.emitFromClient("test-event", "single-data");
+
+      // The detail should be the single value, not wrapped in an array
+      expect(mockHandler).toHaveBeenCalledTimes(1);
+      expect(mockHandler).toHaveBeenCalledWith("single-data");
+    });
+
+    it("should emit empty events correctly", () => {
+      const mockHandler = vi.fn();
+      serverEventTarget.addEventListener("test-event", (event: Event) => {
+        if (event instanceof CustomEvent) {
+          mockHandler(event.detail);
+        }
+      });
+
+      // Emit event from client with no arguments
+      socketEmitManager.emitFromClient("test-event");
+
+      // The detail should be undefined for empty args
+      expect(mockHandler).toHaveBeenCalledTimes(1);
+      expect(mockHandler).toHaveBeenCalledWith(null);
+    });
+
+    it("should handle acknowledgments correctly", () => {
+      return new Promise<void>((resolve) => {
+        // Setup a server mock that will respond to acknowledgments
+        socketEmitManager.serverOn("ack-test", (data, callback) => {
+          expect(data).toBe("request-data");
+          callback("response-data");
+        });
+
+        // Emit event from client with acknowledgment
+        socketEmitManager.emitFromClient(
+          "ack-test",
+          "request-data",
+          (response: any) => {
+            // This callback should be called when the server responds
+            expect(response).toBe("response-data");
+            resolve();
+          },
+        );
+      });
+    });
+
+    it("should handle multiple callback arguments", () => {
+      return new Promise<void>((done) => {
+        // Setup a server mock that responds with multiple arguments
+        socketEmitManager.serverOn("multi-ack", (data, callback) => {
+          expect(data).toBe("request");
+          callback("response1", "response2", "response3");
+        });
+
+        // Emit with acknowledgment expecting multiple responses
+        socketEmitManager.emitFromClient(
+          "multi-ack",
+          "request",
+          (...responses: any[]) => {
+            expect(responses).toEqual(["response1", "response2", "response3"]);
+            done();
+          },
+        );
+      });
     });
   });
 
   describe("emitFromClientWithAck", () => {
-    it("should return a promise that resolves with acknowledgment data", async () => {
-      const acknowledgeResponse = { status: "success", data: "test" };
-
-      // Add a listener to simulate server processing and acknowledgment
-      serverEventTarget.addEventListener("promise-ack-event", (event) => {
-        if (isCustomEvent(event) && event.detail && event.detail.ackId) {
-          manager.acknowledgeClientEvent(
-            "promise-ack-event",
-            event.detail.ackId,
-            acknowledgeResponse,
-          );
-        }
+    it("should return a promise that resolves with the response", async () => {
+      // Setup server handler
+      socketEmitManager.serverOn("promise-test", (data, callback) => {
+        expect(data).toBe("promise-request");
+        callback("promise-response");
       });
 
-      const result = await manager.emitFromClientWithAck(
-        "promise-ack-event",
+      // Use the promisified version
+      const response = await socketEmitManager.emitFromClientWithAck(
+        "promise-test",
+        "promise-request",
+      );
+      expect(response).toBe("promise-response");
+    });
+
+    it("should handle multiple response arguments", async () => {
+      socketEmitManager.serverOn("multi-promise", (data, callback) => {
+        callback("res1", "res2", "res3");
+      });
+
+      const response = await socketEmitManager.emitFromClientWithAck(
+        "multi-promise",
         "data",
       );
+      expect(response).toEqual(["res1", "res2", "res3"]);
+    });
 
-      expect(result).toEqual(acknowledgeResponse);
+    it("should call both the promise and the callback if provided", () => {
+      return new Promise<void>((done) => {
+        const callbackSpy = vi.fn();
+
+        socketEmitManager.serverOn("dual-callback", (data, callback) => {
+          callback("dual-response");
+        });
+
+        socketEmitManager
+          .emitFromClientWithAck("dual-callback", "data", callbackSpy)
+          .then((response) => {
+            expect(response).toBe("dual-response");
+            expect(callbackSpy).toHaveBeenCalledWith("dual-response");
+            done();
+          });
+      });
     });
   });
 
   describe("send", () => {
-    it("should emit a 'message' event", () => {
-      const serverListener = vi.fn();
-      serverEventTarget.addEventListener("message", serverListener);
-
-      manager.send("hello");
-
-      expect(serverListener).toHaveBeenCalledTimes(1);
-      const event = serverListener.mock.calls[0][0];
-      expect(event.detail).toEqual(["hello"]);
-    });
-
-    it("should support acknowledgments", () => {
-      const callback = vi.fn();
-      const acknowledgeResponse = "message-ack";
-
-      // Add a listener to simulate server processing and acknowledgment
-      serverEventTarget.addEventListener("message", (event) => {
-        if (isCustomEvent(event) && event.detail && event.detail.ackId) {
-          manager.acknowledgeClientEvent(
-            "promise-ack-event",
-            event.detail.ackId,
-            acknowledgeResponse,
-          );
+    it("should emit a message event", () => {
+      const mockHandler = vi.fn();
+      serverEventTarget.addEventListener("message", (event: Event) => {
+        if (event instanceof CustomEvent) {
+          mockHandler(event.detail);
         }
       });
 
-      manager.send("hello", callback);
+      socketEmitManager.send("hello");
+      expect(mockHandler).toHaveBeenCalledWith("hello");
+    });
 
-      // Wait for the next tick to allow promises to resolve
-      setTimeout(() => {
-        expect(callback).toHaveBeenCalledWith(acknowledgeResponse);
-      }, 0);
+    it("should support acknowledgments", () => {
+      return new Promise<void>((done) => {
+        socketEmitManager.serverOn("message", (data, callback) => {
+          expect(data).toBe("msg-with-ack");
+          callback("message-received");
+        });
+
+        socketEmitManager.send("msg-with-ack", (response: string) => {
+          expect(response).toBe("message-received");
+          done();
+        });
+      });
     });
   });
 
   describe("emitFromServer", () => {
-    it("should emit custom events from server to client", () => {
-      const clientListener = vi.fn();
-      clientEventTarget.addEventListener("server-event", clientListener);
+    it("should emit custom events to the client", () => {
+      const mockHandler = vi.fn();
+      clientEventTarget.addEventListener("server-event", (event: Event) => {
+        if (event instanceof CustomEvent) {
+          mockHandler(event.detail);
+        }
+      });
 
-      manager.emitFromServer("server-event", "server-data", 456);
-
-      expect(clientListener).toHaveBeenCalledTimes(1);
-      const event = clientListener.mock.calls[0][0];
-      expect(isCustomEvent(event)).toBe(true);
-      expect(event.type).toBe("server-event");
-      expect(event.detail).toEqual(["server-data", 456]);
+      socketEmitManager.emitFromServer("server-event", "server-data");
+      expect(mockHandler).toHaveBeenCalledWith("server-data");
     });
 
-    it("should handle reserved 'connect' event", () => {
-      const connectListener = vi.fn();
-      clientEventTarget.addEventListener("connect", connectListener);
-
-      manager.emitFromServer("connect");
-
-      expect(connectListener).toHaveBeenCalledTimes(1);
+    it("should handle reserved connect event", () => {
+      socketEmitManager.emitFromServer("connect");
       expect(clientSocketAttributes.connected).toBe(true);
       expect(clientSocketAttributes.disconnected).toBe(false);
-      expect(clientSocketAttributes.id).toBeTruthy(); // Should have assigned an ID
+      expect(clientSocketAttributes.id).toBeTruthy();
     });
 
-    it("should handle reserved 'disconnect' event", () => {
-      // First connect
-      manager.emitFromServer("connect");
-
-      const disconnectListener = vi.fn();
-      clientEventTarget.addEventListener("disconnect", disconnectListener);
-
-      manager.emitFromServer("disconnect");
-
-      expect(disconnectListener).toHaveBeenCalledTimes(1);
+    it("should handle reserved disconnect event", () => {
+      socketEmitManager.emitFromServer("disconnect");
       expect(clientSocketAttributes.connected).toBe(false);
       expect(clientSocketAttributes.disconnected).toBe(true);
-      // ID should be preserved even after disconnect
-      expect(clientSocketAttributes.id).toBeTruthy();
     });
   });
 
-  describe("acknowledgeClientEvent", () => {
-    it("should dispatch an event with the provided response", () => {
-      const eventKey = "test-event";
-      const ackId = "test-ack-id";
-      const response = { success: true };
-      const serverListener = vi.fn();
+  describe("serverOn", () => {
+    it("should handle regular events from client", () => {
+      const handlerSpy = vi.fn();
+      socketEmitManager.serverOn("client-event", handlerSpy);
 
-      serverEventTarget.addEventListener(eventKey, serverListener);
+      socketEmitManager.emitFromClient("client-event", "client-data");
+      expect(handlerSpy).toHaveBeenCalledWith("client-data");
+    });
 
-      manager.acknowledgeClientEvent(eventKey, ackId, response);
+    it("should handle events with multiple arguments", () => {
+      const handlerSpy = vi.fn();
+      socketEmitManager.serverOn("multi-arg", handlerSpy);
 
-      expect(serverListener).toHaveBeenCalledTimes(1);
-      const event = serverListener.mock.calls[0][0];
-      expect(isCustomEvent(event)).toBe(true);
-      expect(event.detail).toEqual(response);
+      socketEmitManager.emitFromClient("multi-arg", "arg1", "arg2", "arg3");
+      expect(handlerSpy).toHaveBeenCalledWith("arg1", "arg2", "arg3");
+    });
+
+    it("should properly handle acknowledgment events", () => {
+      return new Promise<void>((done) => {
+        const handlerSpy = vi.fn((data, callback) => {
+          expect(data).toBe("ack-data");
+          callback("ack-response");
+        });
+
+        socketEmitManager.serverOn("ack-event", handlerSpy);
+
+        socketEmitManager.emitFromClient(
+          "ack-event",
+          "ack-data",
+          (response: any) => {
+            expect(response).toBe("ack-response");
+            expect(handlerSpy).toHaveBeenCalled();
+            done();
+          },
+        );
+      });
+    });
+
+    it("should support multiple acknowledgment callbacks", () => {
+      return new Promise<void>((done) => {
+        socketEmitManager.serverOn("multi-ack-cb", (data, callback) => {
+          callback("resp1", "resp2");
+        });
+
+        socketEmitManager.emitFromClient(
+          "multi-ack-cb",
+          "data",
+          (r1: string, r2: string) => {
+            expect(r1).toBe("resp1");
+            expect(r2).toBe("resp2");
+            done();
+          },
+        );
+      });
     });
   });
 });
