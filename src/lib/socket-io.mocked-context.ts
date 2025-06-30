@@ -20,7 +20,6 @@ export class MockedSocketIoContext {
 
   private readonly eventManager = new SocketEventManager(
     this.clientEventTarget,
-    this.serverEventTarget,
   );
 
   private readonly eventManagerCatchAll = new SocketEventManagerCatchAll(
