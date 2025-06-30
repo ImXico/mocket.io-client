@@ -47,7 +47,6 @@ export const mockSocketIo = (
     } satisfies MockedSocketIoClientApi;
   };
 
-  // Add common Socket.io properties to the factory function
   socketFactory.lookup = socketFactory; // Alias for main function
   socketFactory.connect = socketFactory; // Another alias
   socketFactory.protocol = 5; // Current Socket.io protocol version
@@ -57,7 +56,6 @@ export const mockSocketIo = (
   const mockedIo = vi.mocked(io as any);
   mockedIo.mockImplementation(() => socketFactory());
 
-  // Add the static properties to the mocked function as well
   mockedIo.lookup = socketFactory;
   mockedIo.connect = socketFactory;
   mockedIo.protocol = 5;
