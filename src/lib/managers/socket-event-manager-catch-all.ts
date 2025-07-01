@@ -23,24 +23,25 @@ export class SocketEventManagerCatchAll {
   private readonly anyOutgoingHandlerRegistry: AnyEventHandlerRegistry =
     new Map();
 
-  // Triggered when the client receives any event from the server
-  // `onAny`: Adds listeners to the end of the queue (they execute last)
+  /**
+   * Triggered when the client receives any event from the server.
+   * Adds listeners to the end of the queue (i.e. they execute last)
+   * @param handler - The handler to be called when any event is received.
+   * @returns {SocketEventTarget} - The client event target for chaining.
+   */
   public onAnyIncoming = (handler: OuterHandler): SocketEventTarget => {
-    // Create an inner handler that adapts the event format
     const innerHandler = (event: Event) => {
       if (isCustomEvent(event)) {
         // Socket.io's onAny callback signature is (eventName, ...args)
         if (Array.isArray(event.detail)) {
-          // If detail is an array, spread it as additional arguments after the event name
           return handler(event.type, ...event.detail);
         } else {
-          // Otherwise pass event name and detail as separate arguments
           return handler(event.type, event.detail);
         }
-      } else {
-        // For non-custom events, just pass the event type
-        return handler(event.type);
       }
+
+      // For non-custom events, just pass the event type
+      return handler(event.type);
     };
 
     // Store the handler mapping for later retrieval or removal
@@ -55,14 +56,17 @@ export class SocketEventManagerCatchAll {
     return this.clientEventTarget;
   };
 
-  // Triggered when the client emits any event to the server
+  /**
+   * Triggered when the client emits any event to the server
+   * Adds listeners to the end of the queue (i.e. they execute last)
+   * @param handler - The handler to be called when any event is received.
+   * @returns {SocketEventTarget} - The client event target for chaining.
+   */
   public onAnyOutgoing = (handler: OuterHandler): SocketEventTarget => {
-    // Create an inner handler that adapts the event format for outgoing events
     const innerHandler = (event: Event) => {
       if (isCustomEvent(event)) {
         // Socket.io's onAnyOutgoing callback signature is (eventName, ...args)
         if (Array.isArray(event.detail)) {
-          // If detail is an array, spread it as additional arguments after the event name
           return handler(event.type, ...event.detail);
         } else if (
           event.detail &&
