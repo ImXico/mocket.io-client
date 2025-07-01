@@ -118,9 +118,8 @@ export class SocketEventManager {
       return !!eventHandlers ? Array.from(eventHandlers.keys()) : [];
     }
 
-    return this.handlerRegistry
-      .values()
-      .flatMap((handlers) => Array.from(handlers.keys()))
-      .toArray();
+    return Array.from(this.handlerRegistry.values()).flatMap((handlers) =>
+      Array.from(handlers.keys()),
+    );
   };
 }
