@@ -27,17 +27,28 @@ export class SocketEventManager {
     eventKey: string,
     handler: OuterHandler,
   ): SocketEventTarget => {
+    // Initialize handler registry for this event key if it doesn't exist
     if (!this.handlerRegistry.has(eventKey)) {
       this.handlerRegistry.set(eventKey, new Map());
     }
 
     const innerHandler = (event: Event) => {
       if (isCustomEvent(event)) {
-        if (Array.isArray(event.detail)) {
-          // Pass all arguments to the handler
-          return handler(...event.detail);
+        if (!event.detail) {
+          // If detail is undefined or null, call handler with undefined
+          return handler(event.detail);
+        }
+
+        // Check if the detail is a special structure with _spreadArgs
+        if (
+          event.detail &&
+          typeof event.detail === "object" &&
+          event.detail._spreadArgs
+        ) {
+          // Multiple arguments that should be spread
+          return handler(...event.detail.args);
         } else {
-          // Single argument case
+          // Single argument case (or undefined)
           return handler(event.detail);
         }
       }
@@ -66,12 +77,16 @@ export class SocketEventManager {
         // Remove the handler first to ensure it only runs once
         this.off(eventKey, handler);
 
-        // Handle array and non-array cases the same way as clientOn/serverOn
-        if (Array.isArray(event.detail)) {
-          // Pass all arguments to the handler
-          return handler(...event.detail);
+        // Check if the detail is a special structure with _spreadArgs
+        if (
+          event.detail &&
+          typeof event.detail === "object" &&
+          event.detail._spreadArgs
+        ) {
+          // Multiple arguments that should be spread
+          return handler(...event.detail.args);
         } else {
-          // Single argument case
+          // Single argument case (or undefined)
           return handler(event.detail);
         }
       }
