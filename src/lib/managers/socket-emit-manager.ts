@@ -38,12 +38,22 @@ const isReservedEventFromServer = (
   );
 };
 
+/**
+ * Formats the payload for an event based on the number of arguments.
+ * If there are multiple arguments, marks them for spreading with _spreadArgs flag.
+ * @param args - The arguments to format
+ * @returns The formatted payload
+ */
 const getDetailPayloadForEvent = (args: any[]): any => {
   if (args.length === 0) {
     return undefined;
+  } else if (args.length === 1) {
+    // Single argument - pass as is (even if it's an array)
+    return args[0];
+  } else {
+    // Multiple arguments - wrap in special structure to indicate spreading
+    return { _spreadArgs: true, args: args };
   }
-
-  return args.length === 1 ? args[0] : args;
 };
 
 const getAckEventKey = (eventKey: string): string => {
@@ -79,23 +89,21 @@ export class SocketEmitManager {
     eventKey: EventType,
     ...args: ArgsType
   ): SocketEventTarget => {
-    console.log("@emitFromClient");
     const lastArg = args.length > 0 ? args[args.length - 1] : undefined;
     const hasCallback = typeof lastArg === "function";
 
     // Regular emit without acknowledgment
     if (!hasCallback) {
-      console.log("@emitFromClient ---- regular ");
+      const formattedArgs = getDetailPayloadForEvent(args);
+
       this.serverEventTarget.dispatchEvent(
         new CustomEvent(eventKey, {
-          detail: getDetailPayloadForEvent(args),
+          detail: formattedArgs,
         }),
       );
 
       return this.clientEventTarget;
     }
-
-    console.log("1 @emitFromClient ---- with ack");
 
     const callback = args.pop();
     const ackId = genUniqueAckId();
@@ -108,20 +116,14 @@ export class SocketEmitManager {
         event.detail &&
         event.detail.ackId === ackId
       ) {
-        console.log("5.5 event.detail", event.detail);
-        console.log(" ---->", event.detail.args);
-        if (Array.isArray(event.detail.args)) {
-          console.log("6 Calling callback with array:", event.detail.args);
-
-          callback(...event.detail.args);
-          // but why do we even need to call the callback here?
+        if (
+          event.detail.args &&
+          typeof event.detail.args === "object" &&
+          event.detail.args._spreadArgs
+        ) {
+          // Handle multiple args that need to be spread
+          callback(...event.detail.args.args);
         } else {
-          console.log(
-            "6 Calling callback with single value:",
-            event.detail.args,
-          );
-
-          // Fallback for single argument or non-array case
           callback(event.detail.args);
         }
 
@@ -133,12 +135,14 @@ export class SocketEmitManager {
     // Setup a listener for the acknowledgment response
     this.clientEventTarget.addEventListener(ackEventKey, ackListener);
 
-    console.log("2 args are: ", args);
+    // Format the arguments for acknowledgment
+    const formattedArgs = getDetailPayloadForEvent(args);
+
     this.serverEventTarget.dispatchEvent(
       new CustomEvent(ackEventKey, {
         detail: {
           ackId,
-          args,
+          args: formattedArgs,
         },
       }),
     );
@@ -153,7 +157,6 @@ export class SocketEmitManager {
     eventKey: EventType,
     ...args: ArgsType
   ): Promise<any> => {
-    console.log("@emitFromClientWithAck");
     return new Promise<any>((resolve) => {
       const lastArg = args.length > 0 ? args[args.length - 1] : undefined;
       const hasCallback = typeof lastArg === "function";
@@ -171,7 +174,11 @@ export class SocketEmitManager {
     });
   };
 
-  // 'send' is a shorthand for emitting a 'message' event
+  /**
+   * 'send' is a shorthand for emitting a 'message' event.
+   * @param args - The arguments to send with the message.
+   * @returns SocketEventTarget - The target to which the event is sent.
+   */
   public send = <ArgsType extends any[] = any[]>(
     ...args: any[]
   ): SocketEventTarget => {
@@ -214,13 +221,13 @@ export class SocketEmitManager {
     ArgsType extends any[] = any[],
   >(
     eventKey: EventType,
-    ...args: ArgsType
+    args: ArgsType,
   ): SocketEventTarget => {
-    const detail = getDetailPayloadForEvent(args);
+    const formattedArgs = getDetailPayloadForEvent(args);
 
     this.clientEventTarget.dispatchEvent(
       new CustomEvent(eventKey, {
-        detail,
+        detail: formattedArgs,
       }),
     );
 
@@ -236,7 +243,7 @@ export class SocketEmitManager {
   ): SocketEventTarget => {
     return isReservedEventFromServer(eventKey)
       ? this.emitReservedFromServer(eventKey)
-      : this.emitCustomFromServer(eventKey, ...args);
+      : this.emitCustomFromServer(eventKey, args);
   };
 
   public serverOn = <EventType extends string = string>(
@@ -247,35 +254,57 @@ export class SocketEmitManager {
 
     const regularEventListener = (event: Event) => {
       if (isCustomEvent(event)) {
-        const isArray = Array.isArray(event.detail);
-        console.log(event.detail);
-        const args = isArray ? event.detail : [event.detail];
-        handler(...args);
+        // Check if the detail is a special structure with _spreadArgs
+        if (
+          event.detail &&
+          typeof event.detail === "object" &&
+          event.detail._spreadArgs
+        ) {
+          handler(...event.detail.args);
+        } else if (event.detail === undefined) {
+          handler(); // Call with no arguments
+        } else {
+          // Single argument case
+          handler(event.detail);
+        }
       }
     };
 
     const ackEventListener = (event: Event) => {
-      console.log("3 @ mock server on ---");
       if (isCustomEvent(event)) {
         const ackId = event.detail.ackId;
-        const args = Array.isArray(event.detail.args)
-          ? event.detail.args
-          : [event.detail.args];
 
-        // Call the handler with args and callback
-        console.log("4 ????", ...args);
+        let args: any[] = [];
 
-        // ...args is a bunch of args
-        // the after the comma is the very last arg — a function that takes some param(s)
-        // here callbackArgs would be e.g. callbac(true) --> callbackArgs = true
+        // Check if the args are in the special structure with _spreadArgs
+        if (
+          event.detail.args &&
+          typeof event.detail.args === "object" &&
+          event.detail.args._spreadArgs
+        ) {
+          // Multiple arguments that were wrapped with _spreadArgs
+          args = [...event.detail.args.args];
+        } else if (event.detail.args === undefined) {
+          // No arguments case
+          args = [];
+        } else if (Array.isArray(event.detail.args)) {
+          // Single argument that happens to be an array - keep it as an array, but nested
+          // within another array, as we'll always need to spread int he handler call below
+          args = [event.detail.args];
+        } else {
+          // Single non-array argument
+          args = [event.detail.args];
+        }
+
         handler(...args, (...callbackArgs: any[]) => {
-          console.log("5 callback args: ", ...callbackArgs);
-          console.log("5.1 Server sending ack with:", ackId, callbackArgs);
+          // Format the callback arguments for sending back
+          const formattedCallbackArgs = getDetailPayloadForEvent(callbackArgs);
+
           this.clientEventTarget.dispatchEvent(
             new CustomEvent(ackEventKey, {
               detail: {
                 ackId,
-                args: callbackArgs,
+                args: formattedCallbackArgs,
               },
             }),
           );
