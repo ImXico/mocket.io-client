@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { SocketEventManager } from "./socket-event-manager";
 import { SocketEventTarget } from "../target/socket-event-target";
 
-describe("SocketEventManager - Comprehensive Edge Cases", () => {
+describe("SocketEventManager", () => {
   let socketEventManager: SocketEventManager;
   let clientEventTarget: SocketEventTarget;
 
