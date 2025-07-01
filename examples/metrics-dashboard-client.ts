@@ -70,29 +70,29 @@ export class MetricsDashboardClient {
   private setupEventListeners(): void {
     this.socket.on("connect", () => {
       this._isConnected = true;
-      console.log(`Connected to monitoring server with ID: ${this.socket.id}`);
+      console.info(`Connected to monitoring server with ID: ${this.socket.id}`);
     });
 
     this.socket.on("disconnect", () => {
       this._isConnected = false;
-      console.log("Disconnected from monitoring server");
+      console.info("Disconnected from monitoring server");
     });
 
     this.socket.on("metric_update", (metrics) => {
       this._currentMetrics = metrics;
-      console.log(
+      console.info(
         `Received metrics update at ${new Date(metrics.timestamp).toISOString()}`,
       );
     });
 
     this.socket.on("alert", (alert) => {
       this._alerts.push(alert);
-      console.log(`ALERT [${alert.level}]: ${alert.message}`);
+      console.info(`ALERT [${alert.level}]: ${alert.message}`);
     });
 
     this.socket.on("status_change", (status) => {
       this._systemStatus = status;
-      console.log(`System status changed to: ${status}`);
+      console.info(`System status changed to: ${status}`);
     });
   }
 
@@ -136,7 +136,7 @@ export class MetricsDashboardClient {
       }
 
       this.socket.emit("subscribe", metricTypes, (success) => {
-        console.log("inside callback of subscribe");
+        console.info("inside callback of subscribe");
         if (success) {
           const combinedSet = new Set([
             ...this._subscribedMetrics,
@@ -144,9 +144,9 @@ export class MetricsDashboardClient {
           ]);
           this._subscribedMetrics = Array.from(combinedSet);
 
-          console.log(this._subscribedMetrics);
+          console.info(this._subscribedMetrics);
 
-          console.log(`Subscribed to: ${metricTypes.join(", ")}`);
+          console.info(`Subscribed to: ${metricTypes.join(", ")}`);
         } else {
           console.error("Failed to subscribe to metrics");
         }
@@ -168,7 +168,7 @@ export class MetricsDashboardClient {
           this._subscribedMetrics = this._subscribedMetrics.filter(
             (m) => !metricTypes.includes(m),
           );
-          console.log(`Unsubscribed from: ${metricTypes.join(", ")}`);
+          console.info(`Unsubscribed from: ${metricTypes.join(", ")}`);
         } else {
           console.error("Failed to unsubscribe from metrics");
         }
@@ -194,7 +194,7 @@ export class MetricsDashboardClient {
         params,
         (success, result) => {
           if (success) {
-            console.log(`Action ${actionType} completed successfully`);
+            console.info(`Action ${actionType} completed successfully`);
             resolve(result);
           } else {
             console.error(`Action ${actionType} failed`);
@@ -217,7 +217,7 @@ export class MetricsDashboardClient {
         if (success) {
           // Remove the alert from the list or mark as acknowledged
           this._alerts = this._alerts.filter((alert) => alert.id !== alertId);
-          console.log(`Alert ${alertId} acknowledged`);
+          console.info(`Alert ${alertId} acknowledged`);
         } else {
           console.error(`Failed to acknowledge alert ${alertId}`);
         }
