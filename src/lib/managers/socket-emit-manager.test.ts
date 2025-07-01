@@ -25,18 +25,14 @@ describe("SocketEmitManager", () => {
       serverEventTarget,
       clientSocketAttributes,
     );
-
-    // Silence console logs during tests
-    vi.spyOn(console, "log").mockImplementation(() => {});
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  describe("emitFromClient", () => {
-    it("should emit regular events without acknowledgment", () => {
-      // Setup a listener on the server
+  describe("emitFromClient - Argument Handling Edge Cases", () => {
+    it("should handle no arguments", () => {
       const mockHandler = vi.fn();
       serverEventTarget.addEventListener("test-event", (event: Event) => {
         if (event instanceof CustomEvent) {
@@ -44,78 +40,274 @@ describe("SocketEmitManager", () => {
         }
       });
 
-      // Emit event from client
-      socketEmitManager.emitFromClient("test-event", "data1", "data2");
-
-      // Check that the server received the event with correct data
-      expect(mockHandler).toHaveBeenCalledTimes(1);
-      expect(mockHandler).toHaveBeenCalledWith(["data1", "data2"]);
-    });
-
-    it("should emit events with single argument correctly", () => {
-      const mockHandler = vi.fn();
-      serverEventTarget.addEventListener("test-event", (event: Event) => {
-        if (event instanceof CustomEvent) {
-          mockHandler(event.detail);
-        }
-      });
-
-      // Emit event from client with a single argument
-      socketEmitManager.emitFromClient("test-event", "single-data");
-
-      // The detail should be the single value, not wrapped in an array
-      expect(mockHandler).toHaveBeenCalledTimes(1);
-      expect(mockHandler).toHaveBeenCalledWith("single-data");
-    });
-
-    it("should emit empty events correctly", () => {
-      const mockHandler = vi.fn();
-      serverEventTarget.addEventListener("test-event", (event: Event) => {
-        if (event instanceof CustomEvent) {
-          mockHandler(event.detail);
-        }
-      });
-
-      // Emit event from client with no arguments
       socketEmitManager.emitFromClient("test-event");
-
-      // The detail should be undefined for empty args
-      expect(mockHandler).toHaveBeenCalledTimes(1);
       expect(mockHandler).toHaveBeenCalledWith(null);
     });
 
-    it("should handle acknowledgments correctly", () => {
-      return new Promise<void>((resolve) => {
-        // Setup a server mock that will respond to acknowledgments
-        socketEmitManager.serverOn("ack-test", (data, callback) => {
-          expect(data).toBe("request-data");
-          callback("response-data");
+    it("should handle single string argument", () => {
+      const mockHandler = vi.fn();
+      serverEventTarget.addEventListener("test-event", (event: Event) => {
+        if (event instanceof CustomEvent) {
+          mockHandler(event.detail);
+        }
+      });
+
+      socketEmitManager.emitFromClient("test-event", "single-string");
+      expect(mockHandler).toHaveBeenCalledWith("single-string");
+    });
+
+    it("should handle single array argument (should NOT be spread)", () => {
+      const mockHandler = vi.fn();
+      serverEventTarget.addEventListener("test-event", (event: Event) => {
+        if (event instanceof CustomEvent) {
+          mockHandler(event.detail);
+        }
+      });
+
+      const singleArray = ["item1", "item2", "item3"];
+      socketEmitManager.emitFromClient("test-event", singleArray);
+      expect(mockHandler).toHaveBeenCalledWith(singleArray);
+    });
+
+    it("should handle multiple arguments (should be marked for spreading)", () => {
+      const mockHandler = vi.fn();
+      serverEventTarget.addEventListener("test-event", (event: Event) => {
+        if (event instanceof CustomEvent) {
+          mockHandler(event.detail);
+        }
+      });
+
+      socketEmitManager.emitFromClient("test-event", "arg1", "arg2", "arg3");
+      expect(mockHandler).toHaveBeenCalledWith({
+        _spreadArgs: true,
+        args: ["arg1", "arg2", "arg3"],
+      });
+    });
+
+    it("should handle single object argument", () => {
+      const mockHandler = vi.fn();
+      serverEventTarget.addEventListener("test-event", (event: Event) => {
+        if (event instanceof CustomEvent) {
+          mockHandler(event.detail);
+        }
+      });
+
+      const singleObject = { name: "test", data: [1, 2, 3] };
+      socketEmitManager.emitFromClient("test-event", singleObject);
+      expect(mockHandler).toHaveBeenCalledWith(singleObject);
+    });
+
+    it("should handle single null/undefined arguments", () => {
+      const mockHandler = vi.fn();
+
+      serverEventTarget.addEventListener("test-event", (event: Event) => {
+        if (event instanceof CustomEvent) {
+          mockHandler(event.detail);
+        }
+      });
+
+      socketEmitManager.emitFromClient("test-event", null);
+      socketEmitManager.emitFromClient("test-event", undefined);
+
+      expect(mockHandler).toHaveBeenNthCalledWith(1, null);
+      expect(mockHandler).toHaveBeenNthCalledWith(2, null);
+    });
+
+    it("should handle mixed argument types", () => {
+      const mockHandler = vi.fn();
+      serverEventTarget.addEventListener("test-event", (event: Event) => {
+        if (event instanceof CustomEvent) {
+          mockHandler(event.detail);
+        }
+      });
+
+      socketEmitManager.emitFromClient(
+        "test-event",
+        "string",
+        123,
+        { key: "value" },
+        [1, 2, 3],
+      );
+      expect(mockHandler).toHaveBeenCalledWith({
+        _spreadArgs: true,
+        args: ["string", 123, { key: "value" }, [1, 2, 3]],
+      });
+    });
+  });
+
+  describe("emitFromServer - Argument Handling Edge Cases", () => {
+    it("should handle single array argument from server", () => {
+      const mockHandler = vi.fn();
+      clientEventTarget.addEventListener("server-event", (event: Event) => {
+        if (event instanceof CustomEvent) {
+          mockHandler(event.detail);
+        }
+      });
+
+      const userArray = ["user1", "user2", "user3"];
+      socketEmitManager.emitFromServer("server-event", userArray);
+      expect(mockHandler).toHaveBeenCalledWith(userArray);
+    });
+
+    it("should handle multiple arguments from server", () => {
+      const mockHandler = vi.fn();
+      clientEventTarget.addEventListener("server-event", (event: Event) => {
+        if (event instanceof CustomEvent) {
+          mockHandler(event.detail);
+        }
+      });
+
+      socketEmitManager.emitFromServer("server-event", "arg1", "arg2", "arg3");
+      expect(mockHandler).toHaveBeenCalledWith({
+        _spreadArgs: true,
+        args: ["arg1", "arg2", "arg3"],
+      });
+    });
+
+    it("should handle no arguments from server", () => {
+      const mockHandler = vi.fn();
+      clientEventTarget.addEventListener("server-event", (event: Event) => {
+        if (event instanceof CustomEvent) {
+          mockHandler(event.detail);
+        }
+      });
+
+      socketEmitManager.emitFromServer("server-event");
+      expect(mockHandler).toHaveBeenCalledWith(null);
+    });
+  });
+
+  describe("serverOn - Regular Event Handling Edge Cases", () => {
+    it("should handle single array argument correctly", () => {
+      const handlerSpy = vi.fn();
+      socketEmitManager.serverOn("array-event", handlerSpy);
+
+      const testArray = ["user1", "user2", "user3"];
+      socketEmitManager.emitFromClient("array-event", testArray);
+
+      expect(handlerSpy).toHaveBeenCalledWith(testArray);
+      expect(handlerSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("should handle multiple arguments with spreading", () => {
+      const handlerSpy = vi.fn();
+      socketEmitManager.serverOn("multi-event", handlerSpy);
+
+      socketEmitManager.emitFromClient("multi-event", "arg1", "arg2", "arg3");
+
+      expect(handlerSpy).toHaveBeenCalledWith("arg1", "arg2", "arg3");
+      expect(handlerSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("should handle no arguments", () => {
+      const handlerSpy = vi.fn();
+      socketEmitManager.serverOn("no-args-event", handlerSpy);
+
+      socketEmitManager.emitFromClient("no-args-event");
+
+      expect(handlerSpy).toHaveBeenCalledWith(null);
+      expect(handlerSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("should handle single primitive arguments", () => {
+      const handlerSpy = vi.fn();
+      socketEmitManager.serverOn("primitive-event", handlerSpy);
+
+      socketEmitManager.emitFromClient("primitive-event", "test-string");
+      socketEmitManager.emitFromClient("primitive-event", 42);
+      socketEmitManager.emitFromClient("primitive-event", true);
+      socketEmitManager.emitFromClient("primitive-event", null);
+
+      expect(handlerSpy).toHaveBeenNthCalledWith(1, "test-string");
+      expect(handlerSpy).toHaveBeenNthCalledWith(2, 42);
+      expect(handlerSpy).toHaveBeenNthCalledWith(3, true);
+      expect(handlerSpy).toHaveBeenNthCalledWith(4, null);
+    });
+
+    it("should handle complex nested objects", () => {
+      const handlerSpy = vi.fn();
+      socketEmitManager.serverOn("complex-event", handlerSpy);
+
+      const complexObject = {
+        users: ["user1", "user2"],
+        metadata: { timestamp: Date.now(), version: "1.0" },
+        nested: { deep: { value: [1, 2, 3] } },
+      };
+
+      socketEmitManager.emitFromClient("complex-event", complexObject);
+
+      expect(handlerSpy).toHaveBeenCalledWith(complexObject);
+    });
+  });
+
+  describe("serverOn - Acknowledgment Event Handling Edge Cases", () => {
+    it("should handle ack with single array argument", () => {
+      return new Promise<void>((done) => {
+        socketEmitManager.serverOn("ack-array", (data, callback) => {
+          expect(Array.isArray(data)).toBe(true);
+          expect(data).toEqual(["item1", "item2", "item3"]);
+          callback("array-response");
         });
 
-        // Emit event from client with acknowledgment
         socketEmitManager.emitFromClient(
-          "ack-test",
-          "request-data",
+          "ack-array",
+          ["item1", "item2", "item3"],
           (response: any) => {
-            // This callback should be called when the server responds
-            expect(response).toBe("response-data");
-            resolve();
+            expect(response).toBe("array-response");
+            done();
           },
         );
       });
     });
 
-    it("should handle multiple callback arguments", () => {
+    it("should handle ack with multiple arguments", () => {
       return new Promise<void>((done) => {
-        // Setup a server mock that responds with multiple arguments
-        socketEmitManager.serverOn("multi-ack", (data, callback) => {
+        socketEmitManager.serverOn(
+          "ack-multi",
+          (arg1, arg2, arg3, callback) => {
+            expect(arg1).toBe("first");
+            expect(arg2).toBe("second");
+            expect(arg3).toBe("third");
+            callback("multi-response");
+          },
+        );
+
+        socketEmitManager.emitFromClient(
+          "ack-multi",
+          "first",
+          "second",
+          "third",
+          (response: any) => {
+            expect(response).toBe("multi-response");
+            done();
+          },
+        );
+      });
+    });
+
+    it("should handle ack with no arguments", () => {
+      return new Promise<void>((done) => {
+        socketEmitManager.serverOn("ack-empty", (callback) => {
+          expect(callback).toBeInstanceOf(Function);
+          callback("empty-response");
+        });
+
+        socketEmitManager.emitFromClient("ack-empty", (response: any) => {
+          expect(response).toBe("empty-response");
+          done();
+        });
+      });
+    });
+
+    it("should handle ack callback with multiple return values", () => {
+      return new Promise<void>((done) => {
+        socketEmitManager.serverOn("ack-multi-return", (data, callback) => {
           expect(data).toBe("request");
           callback("response1", "response2", "response3");
         });
 
-        // Emit with acknowledgment expecting multiple responses
         socketEmitManager.emitFromClient(
-          "multi-ack",
+          "ack-multi-return",
           "request",
           (...responses: any[]) => {
             expect(responses).toEqual(["response1", "response2", "response3"]);
@@ -124,57 +316,95 @@ describe("SocketEmitManager", () => {
         );
       });
     });
-  });
 
-  describe("emitFromClientWithAck", () => {
-    it("should return a promise that resolves with the response", async () => {
-      // Setup server handler
-      socketEmitManager.serverOn("promise-test", (data, callback) => {
-        expect(data).toBe("promise-request");
-        callback("promise-response");
-      });
-
-      // Use the promisified version
-      const response = await socketEmitManager.emitFromClientWithAck(
-        "promise-test",
-        "promise-request",
-      );
-      expect(response).toBe("promise-response");
-    });
-
-    it("should handle multiple response arguments", async () => {
-      socketEmitManager.serverOn("multi-promise", (data, callback) => {
-        callback("res1", "res2", "res3");
-      });
-
-      const response = await socketEmitManager.emitFromClientWithAck(
-        "multi-promise",
-        "data",
-      );
-      expect(response).toEqual(["res1", "res2", "res3"]);
-    });
-
-    it("should call both the promise and the callback if provided", () => {
+    it("should handle ack callback with array return value", () => {
       return new Promise<void>((done) => {
-        const callbackSpy = vi.fn();
-
-        socketEmitManager.serverOn("dual-callback", (data, callback) => {
-          callback("dual-response");
+        socketEmitManager.serverOn("ack-array-return", (data, callback) => {
+          expect(data).toBe("request");
+          callback(["response1", "response2", "response3"]);
         });
 
-        socketEmitManager
-          .emitFromClientWithAck("dual-callback", "data", callbackSpy)
-          .then((response) => {
-            expect(response).toBe("dual-response");
-            expect(callbackSpy).toHaveBeenCalledWith("dual-response");
+        socketEmitManager.emitFromClient(
+          "ack-array-return",
+          "request",
+          (response: any) => {
+            expect(response).toEqual(["response1", "response2", "response3"]);
             done();
-          });
+          },
+        );
+      });
+    });
+
+    it("should handle ack with mixed argument types", () => {
+      return new Promise<void>((done) => {
+        socketEmitManager.serverOn(
+          "ack-mixed",
+          (str, num, obj, arr, callback) => {
+            expect(str).toBe("string");
+            expect(num).toBe(42);
+            expect(obj).toEqual({ key: "value" });
+            expect(arr).toEqual([1, 2, 3]);
+            callback("mixed-response");
+          },
+        );
+
+        socketEmitManager.emitFromClient(
+          "ack-mixed",
+          "string",
+          42,
+          { key: "value" },
+          [1, 2, 3],
+          (response: any) => {
+            expect(response).toBe("mixed-response");
+            done();
+          },
+        );
       });
     });
   });
 
-  describe("send", () => {
-    it("should emit a message event", () => {
+  describe("emitFromClientWithAck - Promise-based acknowledgments", () => {
+    it("should handle promise ack with single array", async () => {
+      socketEmitManager.serverOn("promise-array", (data, callback) => {
+        expect(Array.isArray(data)).toBe(true);
+        callback(data.reverse());
+      });
+
+      const response = await socketEmitManager.emitFromClientWithAck(
+        "promise-array",
+        ["a", "b", "c"],
+      );
+      expect(response).toEqual(["c", "b", "a"]);
+    });
+
+    it("should handle promise ack with multiple arguments", async () => {
+      socketEmitManager.serverOn("promise-multi", (arg1, arg2, callback) => {
+        callback(`${arg1}-${arg2}`);
+      });
+
+      const response = await socketEmitManager.emitFromClientWithAck(
+        "promise-multi",
+        "hello",
+        "world",
+      );
+      expect(response).toBe("hello-world");
+    });
+
+    it("should handle promise ack with multiple return values", async () => {
+      socketEmitManager.serverOn("promise-multi-return", (data, callback) => {
+        callback("first", "second", "third");
+      });
+
+      const response = await socketEmitManager.emitFromClientWithAck(
+        "promise-multi-return",
+        "request",
+      );
+      expect(response).toEqual(["first", "second", "third"]);
+    });
+  });
+
+  describe("send method edge cases", () => {
+    it("should handle send with single array", () => {
       const mockHandler = vi.fn();
       serverEventTarget.addEventListener("message", (event: Event) => {
         if (event instanceof CustomEvent) {
@@ -182,105 +412,113 @@ describe("SocketEmitManager", () => {
         }
       });
 
-      socketEmitManager.send("hello");
-      expect(mockHandler).toHaveBeenCalledWith("hello");
+      socketEmitManager.send(["msg1", "msg2", "msg3"]);
+      expect(mockHandler).toHaveBeenCalledWith(["msg1", "msg2", "msg3"]);
     });
 
-    it("should support acknowledgments", () => {
+    it("should handle send with multiple arguments", () => {
+      const mockHandler = vi.fn();
+      serverEventTarget.addEventListener("message", (event: Event) => {
+        if (event instanceof CustomEvent) {
+          mockHandler(event.detail);
+        }
+      });
+
+      socketEmitManager.send("msg1", "msg2", "msg3");
+      expect(mockHandler).toHaveBeenCalledWith({
+        _spreadArgs: true,
+        args: ["msg1", "msg2", "msg3"],
+      });
+    });
+
+    it("should handle send with acknowledgment", () => {
       return new Promise<void>((done) => {
         socketEmitManager.serverOn("message", (data, callback) => {
-          expect(data).toBe("msg-with-ack");
-          callback("message-received");
+          expect(data).toBe("hello");
+          callback("message received");
         });
 
-        socketEmitManager.send("msg-with-ack", (response: string) => {
-          expect(response).toBe("message-received");
+        socketEmitManager.send("hello", (response: any) => {
+          expect(response).toBe("message received");
           done();
         });
       });
     });
   });
 
-  describe("emitFromServer", () => {
-    it("should emit custom events to the client", () => {
-      const mockHandler = vi.fn();
-      clientEventTarget.addEventListener("server-event", (event: Event) => {
-        if (event instanceof CustomEvent) {
-          mockHandler(event.detail);
-        }
-      });
-
-      socketEmitManager.emitFromServer("server-event", "server-data");
-      expect(mockHandler).toHaveBeenCalledWith("server-data");
-    });
-
-    it("should handle reserved connect event", () => {
+  describe("Reserved server events", () => {
+    it("should handle connect event", () => {
       socketEmitManager.emitFromServer("connect");
+
       expect(clientSocketAttributes.connected).toBe(true);
       expect(clientSocketAttributes.disconnected).toBe(false);
       expect(clientSocketAttributes.id).toBeTruthy();
     });
 
-    it("should handle reserved disconnect event", () => {
+    it("should handle disconnect event", () => {
       socketEmitManager.emitFromServer("disconnect");
+
       expect(clientSocketAttributes.connected).toBe(false);
       expect(clientSocketAttributes.disconnected).toBe(true);
     });
+
+    it("should handle connect_error event", () => {
+      const originalConnected = clientSocketAttributes.connected;
+      const originalDisconnected = clientSocketAttributes.disconnected;
+
+      socketEmitManager.emitFromServer("connect_error");
+
+      expect(clientSocketAttributes.connected).toBe(originalConnected);
+      expect(clientSocketAttributes.disconnected).toBe(originalDisconnected);
+    });
   });
 
-  describe("serverOn", () => {
-    it("should handle regular events from client", () => {
+  describe("Edge cases with special characters and objects", () => {
+    it("should handle objects with _spreadArgs property", () => {
       const handlerSpy = vi.fn();
-      socketEmitManager.serverOn("client-event", handlerSpy);
+      socketEmitManager.serverOn("special-object", handlerSpy);
 
-      socketEmitManager.emitFromClient("client-event", "client-data");
-      expect(handlerSpy).toHaveBeenCalledWith("client-data");
+      const specialObject = { _spreadArgs: false, data: "test" };
+      socketEmitManager.emitFromClient("special-object", specialObject);
+
+      expect(handlerSpy).toHaveBeenCalledWith(specialObject);
     });
 
-    it("should handle events with multiple arguments", () => {
+    it("should handle arrays containing objects with _spreadArgs", () => {
       const handlerSpy = vi.fn();
-      socketEmitManager.serverOn("multi-arg", handlerSpy);
+      socketEmitManager.serverOn("array-with-special", handlerSpy);
 
-      socketEmitManager.emitFromClient("multi-arg", "arg1", "arg2", "arg3");
-      expect(handlerSpy).toHaveBeenCalledWith("arg1", "arg2", "arg3");
+      const arrayWithSpecial = [{ _spreadArgs: true }, "normal", 123];
+      socketEmitManager.emitFromClient("array-with-special", arrayWithSpecial);
+
+      expect(handlerSpy).toHaveBeenCalledWith(arrayWithSpecial);
     });
 
-    it("should properly handle acknowledgment events", () => {
-      return new Promise<void>((done) => {
-        const handlerSpy = vi.fn((data, callback) => {
-          expect(data).toBe("ack-data");
-          callback("ack-response");
-        });
+    it("should handle deeply nested arrays", () => {
+      const handlerSpy = vi.fn();
+      socketEmitManager.serverOn("nested-arrays", handlerSpy);
 
-        socketEmitManager.serverOn("ack-event", handlerSpy);
+      const nestedArray = [[[["deep"]], ["nested"]], [["arrays"]]];
+      socketEmitManager.emitFromClient("nested-arrays", nestedArray);
 
-        socketEmitManager.emitFromClient(
-          "ack-event",
-          "ack-data",
-          (response: any) => {
-            expect(response).toBe("ack-response");
-            expect(handlerSpy).toHaveBeenCalled();
-            done();
-          },
-        );
+      expect(handlerSpy).toHaveBeenCalledWith(nestedArray);
+    });
+  });
+
+  describe("Concurrent acknowledgments", () => {
+    it("should handle multiple concurrent acknowledgments", async () => {
+      socketEmitManager.serverOn("concurrent", (id, callback) => {
+        setTimeout(() => callback(`response-${id}`), Math.random() * 10);
       });
-    });
 
-    it("should support multiple acknowledgment callbacks", () => {
-      return new Promise<void>((done) => {
-        socketEmitManager.serverOn("multi-ack-cb", (data, callback) => {
-          callback("resp1", "resp2");
-        });
+      const promises = Array.from({ length: 5 }, (_, i) =>
+        socketEmitManager.emitFromClientWithAck("concurrent", `request-${i}`),
+      );
 
-        socketEmitManager.emitFromClient(
-          "multi-ack-cb",
-          "data",
-          (r1: string, r2: string) => {
-            expect(r1).toBe("resp1");
-            expect(r2).toBe("resp2");
-            done();
-          },
-        );
+      const responses = await Promise.all(promises);
+
+      responses.forEach((response, index) => {
+        expect(response).toBe(`response-request-${index}`);
       });
     });
   });
