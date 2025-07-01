@@ -27,19 +27,19 @@ export class SocketEventManager {
     eventKey: string,
     handler: OuterHandler,
   ): SocketEventTarget => {
-    // Initialize handler registry for this event key if it doesn't exist
     if (!this.handlerRegistry.has(eventKey)) {
       this.handlerRegistry.set(eventKey, new Map());
     }
 
     const innerHandler = (event: Event) => {
       if (isCustomEvent(event)) {
-        if (!event.detail) {
-          // If detail is undefined or null, call handler with undefined
-          return handler(event.detail);
-        }
+        // if (!event.detail) {
+        //   // If detail is undefined or null, call handler with undefined
+        //   return handler(event.detail);
+        // }
 
         // Check if the detail is a special structure with _spreadArgs
+        // TODO move to its own utility function
         if (
           event.detail &&
           typeof event.detail === "object" &&

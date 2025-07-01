@@ -234,6 +234,10 @@ export class SocketEmitManager {
     return this.serverEventTarget;
   };
 
+  // TODO
+  // NOTE: public API methods for emit (client or server) should always spread the args
+  // Private API methods should not spread the args
+  // getDetailPayloadForEvent should *always* be used to format the args in the detail of a CustomEvent; this ensures consistency
   public emitFromServer = <
     EventType extends string = string,
     ArgsType extends any[] = any[],
@@ -262,6 +266,7 @@ export class SocketEmitManager {
         ) {
           handler(...event.detail.args);
         } else if (event.detail === undefined) {
+          // FIXME: check if this is necessary, or we can just do the else below
           handler(); // Call with no arguments
         } else {
           // Single argument case
@@ -283,7 +288,8 @@ export class SocketEmitManager {
           event.detail.args._spreadArgs
         ) {
           // Multiple arguments that were wrapped with _spreadArgs
-          args = [...event.detail.args.args];
+          // We'll be spreading these in the handler call, so no need to spread them here
+          args = event.detail.args.args;
         } else if (event.detail.args === undefined) {
           // No arguments case
           args = [];
@@ -293,6 +299,7 @@ export class SocketEmitManager {
           args = [event.detail.args];
         } else {
           // Single non-array argument
+          // Again, keeping it an array because we'll be spreading it in the handler call below
           args = [event.detail.args];
         }
 
