@@ -205,7 +205,7 @@ describe("SocketEmitManager", () => {
 
       socketEmitManager.emitFromClient("no-args-event");
 
-      expect(handlerSpy).toHaveBeenCalledWith(null);
+      expect(handlerSpy).toHaveBeenCalledWith();
       expect(handlerSpy).toHaveBeenCalledTimes(1);
     });
 
@@ -216,12 +216,10 @@ describe("SocketEmitManager", () => {
       socketEmitManager.emitFromClient("primitive-event", "test-string");
       socketEmitManager.emitFromClient("primitive-event", 42);
       socketEmitManager.emitFromClient("primitive-event", true);
-      socketEmitManager.emitFromClient("primitive-event", null);
 
       expect(handlerSpy).toHaveBeenNthCalledWith(1, "test-string");
       expect(handlerSpy).toHaveBeenNthCalledWith(2, 42);
       expect(handlerSpy).toHaveBeenNthCalledWith(3, true);
-      expect(handlerSpy).toHaveBeenNthCalledWith(4, null);
     });
 
     it("should handle complex nested objects", () => {

@@ -1,5 +1,9 @@
 import { SocketEventTarget } from "../target/socket-event-target";
-import { isCustomEvent } from "../util";
+import {
+  handleCustomEventWithAck,
+  handleCustomEventWithNoAck,
+  isCustomEvent,
+} from "../util";
 import { SocketAttributes } from "./socket-attribute-manager";
 
 /**
@@ -41,10 +45,11 @@ const isReservedEventFromServer = (
 /**
  * Formats the payload for an event based on the number of arguments.
  * If there are multiple arguments, marks them for spreading with _spreadArgs flag.
+ * This function should *always* be used to format the args in the detail of a CustomEvent before dispatching.
  * @param args - The arguments to format
  * @returns The formatted payload
  */
-const getDetailPayloadForEvent = (args: any[]): any => {
+const getDetailPayloadForEventEmission = (args: any[]): any => {
   if (args.length === 0) {
     return undefined;
   } else if (args.length === 1) {
@@ -94,7 +99,7 @@ export class SocketEmitManager {
 
     // Regular emit without acknowledgment
     if (!hasCallback) {
-      const formattedArgs = getDetailPayloadForEvent(args);
+      const formattedArgs = getDetailPayloadForEventEmission(args);
 
       this.serverEventTarget.dispatchEvent(
         new CustomEvent(eventKey, {
@@ -111,22 +116,8 @@ export class SocketEmitManager {
 
     // Set up a one-time event listener for the acknowledgment response
     const ackListener = (event: Event) => {
-      if (
-        isCustomEvent(event) &&
-        event.detail &&
-        event.detail.ackId === ackId
-      ) {
-        if (
-          event.detail.args &&
-          typeof event.detail.args === "object" &&
-          event.detail.args._spreadArgs
-        ) {
-          // Handle multiple args that need to be spread
-          callback(...event.detail.args.args);
-        } else {
-          callback(event.detail.args);
-        }
-
+      if (isCustomEvent(event) && event.detail?.ackId === ackId) {
+        handleCustomEventWithAck(event, callback);
         // Remove the listener after it's been called
         this.clientEventTarget.removeEventListener(ackEventKey, ackListener);
       }
@@ -136,7 +127,7 @@ export class SocketEmitManager {
     this.clientEventTarget.addEventListener(ackEventKey, ackListener);
 
     // Format the arguments for acknowledgment
-    const formattedArgs = getDetailPayloadForEvent(args);
+    const formattedArgs = getDetailPayloadForEventEmission(args);
 
     this.serverEventTarget.dispatchEvent(
       new CustomEvent(ackEventKey, {
@@ -223,7 +214,7 @@ export class SocketEmitManager {
     eventKey: EventType,
     args: ArgsType,
   ): SocketEventTarget => {
-    const formattedArgs = getDetailPayloadForEvent(args);
+    const formattedArgs = getDetailPayloadForEventEmission(args);
 
     this.clientEventTarget.dispatchEvent(
       new CustomEvent(eventKey, {
@@ -234,10 +225,6 @@ export class SocketEmitManager {
     return this.serverEventTarget;
   };
 
-  // TODO
-  // NOTE: public API methods for emit (client or server) should always spread the args
-  // Private API methods should not spread the args
-  // getDetailPayloadForEvent should *always* be used to format the args in the detail of a CustomEvent; this ensures consistency
   public emitFromServer = <
     EventType extends string = string,
     ArgsType extends any[] = any[],
@@ -258,20 +245,7 @@ export class SocketEmitManager {
 
     const regularEventListener = (event: Event) => {
       if (isCustomEvent(event)) {
-        // Check if the detail is a special structure with _spreadArgs
-        if (
-          event.detail &&
-          typeof event.detail === "object" &&
-          event.detail._spreadArgs
-        ) {
-          handler(...event.detail.args);
-        } else if (event.detail === undefined) {
-          // FIXME: check if this is necessary, or we can just do the else below
-          handler(); // Call with no arguments
-        } else {
-          // Single argument case
-          handler(event.detail);
-        }
+        return handleCustomEventWithNoAck(event, handler);
       }
     };
 
@@ -305,7 +279,8 @@ export class SocketEmitManager {
 
         handler(...args, (...callbackArgs: any[]) => {
           // Format the callback arguments for sending back
-          const formattedCallbackArgs = getDetailPayloadForEvent(callbackArgs);
+          const formattedCallbackArgs =
+            getDetailPayloadForEventEmission(callbackArgs);
 
           this.clientEventTarget.dispatchEvent(
             new CustomEvent(ackEventKey, {
