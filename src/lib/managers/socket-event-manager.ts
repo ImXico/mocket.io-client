@@ -1,6 +1,6 @@
 import { SocketEventTarget } from "../target/socket-event-target";
 import { InnerHandler, OuterHandler } from "../types";
-import { isCustomEvent } from "../util";
+import { handleCustomEventWithNoAck, isCustomEvent } from "../util";
 
 /*
  * A registry of event handlers, where the key is the event type and the value is a map
@@ -33,24 +33,7 @@ export class SocketEventManager {
 
     const innerHandler = (event: Event) => {
       if (isCustomEvent(event)) {
-        // if (!event.detail) {
-        //   // If detail is undefined or null, call handler with undefined
-        //   return handler(event.detail);
-        // }
-
-        // Check if the detail is a special structure with _spreadArgs
-        // TODO move to its own utility function
-        if (
-          event.detail &&
-          typeof event.detail === "object" &&
-          event.detail._spreadArgs
-        ) {
-          // Multiple arguments that should be spread
-          return handler(...event.detail.args);
-        } else {
-          // Single argument case (or undefined)
-          return handler(event.detail);
-        }
+        return handleCustomEventWithNoAck(event, handler);
       }
     };
 
@@ -76,19 +59,7 @@ export class SocketEventManager {
       if (isCustomEvent(event)) {
         // Remove the handler first to ensure it only runs once
         this.off(eventKey, handler);
-
-        // Check if the detail is a special structure with _spreadArgs
-        if (
-          event.detail &&
-          typeof event.detail === "object" &&
-          event.detail._spreadArgs
-        ) {
-          // Multiple arguments that should be spread
-          return handler(...event.detail.args);
-        } else {
-          // Single argument case (or undefined)
-          return handler(event.detail);
-        }
+        return handleCustomEventWithNoAck(event, handler);
       }
     };
 

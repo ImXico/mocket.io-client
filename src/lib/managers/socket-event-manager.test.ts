@@ -68,7 +68,7 @@ describe("SocketEventManager", () => {
       clientEventTarget.dispatchEvent(
         new CustomEvent("undefined-event", { detail: undefined }),
       );
-      expect(handler).toHaveBeenCalledWith(null);
+      expect(handler).toHaveBeenCalledWith();
     });
 
     it("should handle null event detail", () => {
@@ -78,7 +78,7 @@ describe("SocketEventManager", () => {
       clientEventTarget.dispatchEvent(
         new CustomEvent("null-event", { detail: null }),
       );
-      expect(handler).toHaveBeenCalledWith(null);
+      expect(handler).toHaveBeenCalledWith();
     });
 
     it("should handle falsy values (0, false, empty string)", () => {
@@ -267,7 +267,7 @@ describe("SocketEventManager", () => {
       expect(handler).toHaveBeenCalledWith(arrayWithSpecial);
     });
 
-    it("should handle non-CustomEvent events", () => {
+    it("should ignore non-CustomEvent events", () => {
       const handler = vi.fn();
       socketEventManager.clientOn("regular-event", handler);
 
@@ -367,7 +367,7 @@ describe("SocketEventManager", () => {
         new CustomEvent("once-null-event", { detail: null }),
       );
 
-      expect(handler).toHaveBeenCalledWith(null);
+      expect(handler).toHaveBeenCalledWith();
       expect(handler).toHaveBeenCalledTimes(1);
       expect(socketEventManager.listeners("once-null-event")).toHaveLength(0);
     });
@@ -613,8 +613,8 @@ describe("SocketEventManager", () => {
       expect(handler).toHaveBeenNthCalledWith(1, "string");
       expect(handler).toHaveBeenNthCalledWith(2, [1, 2, 3]);
       expect(handler).toHaveBeenNthCalledWith(3, "a", "b", "c");
-      expect(handler).toHaveBeenNthCalledWith(4, null);
-      expect(handler).toHaveBeenNthCalledWith(5, null);
+      expect(handler).toHaveBeenNthCalledWith(4);
+      expect(handler).toHaveBeenNthCalledWith(5);
       expect(handler).toHaveBeenCalledTimes(5);
     });
 
