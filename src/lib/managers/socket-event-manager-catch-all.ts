@@ -1,7 +1,7 @@
 import { CATCH_ALL_EVENT_TYPE } from "../constants";
 import { SocketEventTarget } from "../target/socket-event-target";
 import { InnerHandler, OuterHandler } from "../types";
-import { isCustomEvent } from "../util";
+import { handleCustomCatchAllEventWithNoAck, isCustomEvent } from "../util";
 
 type AnyEventHandlerRegistry = Map<
   OuterHandler,
@@ -31,18 +31,12 @@ export class SocketEventManagerCatchAll {
    */
   public onAnyIncoming = (handler: OuterHandler): SocketEventTarget => {
     const innerHandler = (event: Event) => {
-      if (isCustomEvent(event)) {
-        // Socket.io's onAny callback signature is (eventName, ...args)
-        if (Array.isArray(event.detail)) {
-          return handler(event.type, ...event.detail);
-        } else {
-          return handler(event.type, event.detail);
-        }
+      if (isCustomEvent(event) && !event.type.endsWith(":ack")) {
+        return handleCustomCatchAllEventWithNoAck(event, handler);
       }
-
-      // For non-custom events, just pass the event type
-      return handler(event.type);
     };
+    // For non-custom events, just pass the event type
+    // return handler(event.type);
 
     // Store the handler mapping for later retrieval or removal
     this.anyIncomingHandlerRegistry.set(handler, {
@@ -64,24 +58,8 @@ export class SocketEventManagerCatchAll {
    */
   public onAnyOutgoing = (handler: OuterHandler): SocketEventTarget => {
     const innerHandler = (event: Event) => {
-      if (isCustomEvent(event)) {
-        // Socket.io's onAnyOutgoing callback signature is (eventName, ...args)
-        if (Array.isArray(event.detail)) {
-          return handler(event.type, ...event.detail);
-        } else if (
-          event.detail &&
-          typeof event.detail === "object" &&
-          "args" in event.detail
-        ) {
-          // Special case for acknowledgment events which have a different structure
-          return handler(event.type, ...event.detail.args);
-        } else {
-          // Otherwise pass event name and detail as separate arguments
-          return handler(event.type, event.detail);
-        }
-      } else {
-        // For non-custom events, just pass the event type
-        return handler(event.type);
+      if (isCustomEvent(event) && !event.type.endsWith(":ack")) {
+        return handleCustomCatchAllEventWithNoAck(event, handler);
       }
     };
 
@@ -101,55 +79,57 @@ export class SocketEventManagerCatchAll {
   };
 
   public offAnyIncoming = (handler?: OuterHandler): SocketEventTarget => {
-    if (handler) {
-      const handlerEntry = this.anyIncomingHandlerRegistry.get(handler);
-
-      if (handlerEntry) {
+    if (!handler) {
+      this.anyIncomingHandlerRegistry.forEach((entry) => {
         this.clientEventTarget.removeEventListener(
           CATCH_ALL_EVENT_TYPE,
-          handlerEntry.innerHandler,
+          entry.innerHandler,
         );
+      });
 
-        this.anyIncomingHandlerRegistry.delete(handler);
-        return this.clientEventTarget;
-      }
+      this.anyIncomingHandlerRegistry.clear();
+
+      return this.clientEventTarget;
     }
 
-    this.anyIncomingHandlerRegistry.forEach((entry) => {
+    const handlerEntry = this.anyIncomingHandlerRegistry.get(handler);
+
+    if (handlerEntry) {
       this.clientEventTarget.removeEventListener(
         CATCH_ALL_EVENT_TYPE,
-        entry.innerHandler,
+        handlerEntry.innerHandler,
       );
-    });
 
-    this.anyIncomingHandlerRegistry.clear();
+      this.anyIncomingHandlerRegistry.delete(handler);
+    }
 
     return this.clientEventTarget;
   };
 
   public offAnyOutgoing = (handler?: OuterHandler): SocketEventTarget => {
-    if (handler) {
-      const handlerEntry = this.anyOutgoingHandlerRegistry.get(handler);
-
-      if (handlerEntry) {
+    if (!handler) {
+      this.anyOutgoingHandlerRegistry.forEach((entry) => {
         this.serverEventTarget.removeEventListener(
           CATCH_ALL_EVENT_TYPE,
-          handlerEntry.innerHandler,
+          entry.innerHandler,
         );
+      });
 
-        this.anyOutgoingHandlerRegistry.delete(handler);
-        return this.clientEventTarget;
-      }
+      this.anyOutgoingHandlerRegistry.clear();
+
+      return this.clientEventTarget;
     }
 
-    this.anyOutgoingHandlerRegistry.forEach((entry) => {
+    const handlerEntry = this.anyOutgoingHandlerRegistry.get(handler);
+
+    if (handlerEntry) {
       this.serverEventTarget.removeEventListener(
         CATCH_ALL_EVENT_TYPE,
-        entry.innerHandler,
+        handlerEntry.innerHandler,
       );
-    });
 
-    this.anyOutgoingHandlerRegistry.clear();
+      this.anyOutgoingHandlerRegistry.delete(handler);
+    }
 
     return this.clientEventTarget;
   };
@@ -157,15 +137,8 @@ export class SocketEventManagerCatchAll {
   public prependAnyIncoming = (handler: OuterHandler): SocketEventTarget => {
     // Create an inner handler that adapts the event format
     const innerHandler = (event: Event) => {
-      if (isCustomEvent(event)) {
-        // Socket.io's onAny callback signature is (eventName, ...args)
-        if (Array.isArray(event.detail)) {
-          return handler(event.type, ...event.detail);
-        } else {
-          return handler(event.type, event.detail);
-        }
-      } else {
-        return handler(event.type);
+      if (isCustomEvent(event) && !event.type.endsWith(":ack")) {
+        return handleCustomCatchAllEventWithNoAck(event, handler);
       }
     };
 
@@ -188,25 +161,8 @@ export class SocketEventManagerCatchAll {
   public prependAnyOutgoing = (handler: OuterHandler): SocketEventTarget => {
     // Create an inner handler that adapts the event format for outgoing events
     const innerHandler = (event: Event) => {
-      if (isCustomEvent(event)) {
-        // Socket.io's onAnyOutgoing callback signature is (eventName, ...args)
-        if (Array.isArray(event.detail)) {
-          // If detail is an array, spread it as additional arguments after the event name
-          return handler(event.type, ...event.detail);
-        } else if (
-          event.detail &&
-          typeof event.detail === "object" &&
-          "args" in event.detail
-        ) {
-          // Special case for acknowledgment events which have a different structure
-          return handler(event.type, ...event.detail.args);
-        } else {
-          // Otherwise pass event name and detail as separate arguments
-          return handler(event.type, event.detail);
-        }
-      } else {
-        // For non-custom events, just pass the event type
-        return handler(event.type);
+      if (isCustomEvent(event) && !event.type.endsWith(":ack")) {
+        return handleCustomCatchAllEventWithNoAck(event, handler);
       }
     };
 
