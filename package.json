@@ -1,5 +1,5 @@
 {
-  "name": "socket-lib",
+  "name": "mocket.io-client",
   "version": "0.1.0",
   "description": "",
   "main": "dist/index",
