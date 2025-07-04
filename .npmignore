@@ -31,6 +31,9 @@ vite.config.*
 .prettierrc*
 .editorconfig
 
+# Release management
+.changeset/
+
 # IDE and editor files
 .vscode/
 .idea/
