@@ -9,21 +9,18 @@ export default defineConfig({
   plugins: [dts({ rollupTypes: true })],
   build: {
     lib: {
-      entry: resolve(__dirname, "./index.ts"),
-      name: "MyLib",
-      // the proper extensions will be added
-      fileName: "index",
+      entry: {
+        "vitest-setup": resolve(__dirname, "./src/vitest/vitest-setup.ts"),
+        "vitest-context": resolve(__dirname, "./src/vitest/vitest-context.ts"),
+      },
+      name: "mocket.io-client",
+      fileName: (format, name) => {
+        return format === "es" ? `${name}.js` : `${name}.cjs`;
+      },
+      formats: ["es", "cjs"], // Only ES and CommonJS
     },
     rollupOptions: {
-      // make sure to externalize deps that shouldn't be bundled into your library
-      // external: ["react"],
-      output: {
-        // Provide global variables to use in the UMD build
-        // for externalized deps
-        globals: {
-          // vue: "Vue",
-        },
-      },
+      external: ["socket.io-client", "vitest"],
     },
   },
 });

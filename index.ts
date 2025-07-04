@@ -1,1 +1,2 @@
-export * from "./src/vitest/vitest.attach-mocket-io-client";
+export * as setup from "./src/vitest/vitest-setup";
+export * as context from "./src/vitest/vitest-context";

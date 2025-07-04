@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
+import { describe, expect, beforeEach, vi, afterEach } from "vitest";
 import { ChatRoomClient, ChatMessage } from "./chat-room-client";
-import { itWithMocketioClient } from "../src/vitest/vitest.attach-mocket-io-client";
+import { itWithMocketioClient } from "../src/vitest/vitest-context";
 
 describe("ChatRoomClient", () => {
   let chatClient: ChatRoomClient;
