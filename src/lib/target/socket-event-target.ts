@@ -6,7 +6,7 @@ import { CATCH_ALL_EVENT_TYPE } from "../constants";
  * event type that matches all events. This allows listeners to be added for all events
  * without having to specify the event type.
  */
-export class SocketEventTarget extends EventTarget {
+export class MocketioEventTarget extends EventTarget {
   /**
    * A list of catch-all event listeners that are triggered for all events.
    */

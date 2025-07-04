@@ -1,14 +1,14 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
-import { SocketEventManager } from "./socket-event-manager";
-import { SocketEventTarget } from "../target/socket-event-target";
+import { MocketioEventManager } from "./mocket-io-event-manager";
+import { MocketioEventTarget } from "../target/socket-event-target";
 
-describe("SocketEventManager", () => {
-  let socketEventManager: SocketEventManager;
-  let clientEventTarget: SocketEventTarget;
+describe("MocketioEventManager", () => {
+  let socketEventManager: MocketioEventManager;
+  let clientEventTarget: MocketioEventTarget;
 
   beforeEach(() => {
-    clientEventTarget = new SocketEventTarget();
-    socketEventManager = new SocketEventManager(clientEventTarget);
+    clientEventTarget = new MocketioEventTarget();
+    socketEventManager = new MocketioEventManager(clientEventTarget);
   });
 
   afterEach(() => {

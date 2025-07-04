@@ -1,10 +1,10 @@
-import { SocketEventTarget } from "../target/socket-event-target";
+import { MocketioEventTarget } from "../target/socket-event-target";
 import {
   handleCustomEventWithAck,
   handleCustomEventWithNoAck,
   isCustomEvent,
 } from "../util";
-import { SocketAttributes } from "./socket-attribute-manager";
+import { SocketAttributes } from "./mocket-io-attribute-manager";
 
 /**
  * Reserved Socket.IO event names.
@@ -74,16 +74,16 @@ const genUniqueAckId = (): string => {
 };
 
 /**
- * SocketEmitManager is responsible for managing the emission of events between
+ * MocketioEmitManager is responsible for managing the emission of events between
  * the client and server sides of a socket connection. It provides methods to emit
  * events from the client to the server, as well as from the server to the client.
  * It also handles acknowledgment of events.
  * @internal
  */
-export class SocketEmitManager {
+export class MocketioEmitManager {
   constructor(
-    private clientEventTarget: SocketEventTarget,
-    private serverEventTarget: SocketEventTarget,
+    private clientEventTarget: MocketioEventTarget,
+    private serverEventTarget: MocketioEventTarget,
     private clientSocketAttributes: SocketAttributes,
   ) {}
 
@@ -93,7 +93,7 @@ export class SocketEmitManager {
   >(
     eventKey: EventType,
     ...args: ArgsType
-  ): SocketEventTarget => {
+  ): MocketioEventTarget => {
     const lastArg = args.length > 0 ? args[args.length - 1] : undefined;
     const hasCallback = typeof lastArg === "function";
 
@@ -168,11 +168,11 @@ export class SocketEmitManager {
   /**
    * 'send' is a shorthand for emitting a 'message' event.
    * @param args - The arguments to send with the message.
-   * @returns SocketEventTarget - The target to which the event is sent.
+   * @returns MocketioEventTarget - The target to which the event is sent.
    */
   public send = <ArgsType extends any[] = any[]>(
     ...args: any[]
-  ): SocketEventTarget => {
+  ): MocketioEventTarget => {
     const lastArg = args.length > 0 ? args[args.length - 1] : undefined;
     const hasCallback = typeof lastArg === "function";
 
@@ -186,7 +186,7 @@ export class SocketEmitManager {
 
   private emitReservedFromServer = (
     eventKey: ReservedServerEvent,
-  ): SocketEventTarget => {
+  ): MocketioEventTarget => {
     if (eventKey === "connect") {
       this.clientSocketAttributes.connected = true;
       this.clientSocketAttributes.disconnected = false;
@@ -213,7 +213,7 @@ export class SocketEmitManager {
   >(
     eventKey: EventType,
     args: ArgsType,
-  ): SocketEventTarget => {
+  ): MocketioEventTarget => {
     const formattedArgs = getDetailPayloadForEventEmission(args);
 
     this.clientEventTarget.dispatchEvent(
@@ -231,7 +231,7 @@ export class SocketEmitManager {
   >(
     eventKey: EventType,
     ...args: ArgsType
-  ): SocketEventTarget => {
+  ): MocketioEventTarget => {
     return isReservedEventFromServer(eventKey)
       ? this.emitReservedFromServer(eventKey)
       : this.emitCustomFromServer(eventKey, args);
@@ -240,7 +240,7 @@ export class SocketEmitManager {
   public serverOn = <EventType extends string = string>(
     eventKey: EventType,
     handler: (...args: any[]) => any,
-  ): SocketEventTarget => {
+  ): MocketioEventTarget => {
     const ackEventKey = getAckEventKey(eventKey);
 
     const regularEventListener = (event: Event) => {

@@ -1,10 +1,10 @@
 import {
-  SocketAttributeManager,
-  SocketEmitManager,
-  SocketEventManager,
-  SocketEventManagerCatchAll,
+  MocketioAttributeManager,
+  MocketioEmitManager,
+  MocketioEventManager,
+  MocketioEventManagerCatchAll,
 } from "../managers";
-import { SocketEventTarget } from "../target/socket-event-target";
+import { MocketioEventTarget } from "../target/socket-event-target";
 import {
   MocketioClientContextClientApi,
   MocketioClientContextMinimalServerApi,
@@ -16,23 +16,23 @@ export interface IMocketioClient {
 }
 
 export class MocketioClient implements IMocketioClient {
-  private readonly clientEventTarget = new SocketEventTarget();
-  private readonly serverEventTarget = new SocketEventTarget();
+  private readonly clientEventTarget = new MocketioEventTarget();
+  private readonly serverEventTarget = new MocketioEventTarget();
 
-  private readonly attributeManager = new SocketAttributeManager(
+  private readonly attributeManager = new MocketioAttributeManager(
     this.clientEventTarget,
   );
 
-  private readonly eventManager = new SocketEventManager(
+  private readonly eventManager = new MocketioEventManager(
     this.clientEventTarget,
   );
 
-  private readonly eventManagerCatchAll = new SocketEventManagerCatchAll(
+  private readonly eventManagerCatchAll = new MocketioEventManagerCatchAll(
     this.clientEventTarget,
     this.serverEventTarget,
   );
 
-  readonly emitManager = new SocketEmitManager(
+  readonly emitManager = new MocketioEmitManager(
     this.clientEventTarget,
     this.serverEventTarget,
     this.attributeManager.getAttributes(),

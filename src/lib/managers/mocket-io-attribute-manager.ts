@@ -1,5 +1,5 @@
 import { Manager } from "socket.io-client";
-import { SocketEventTarget } from "../target/socket-event-target";
+import { MocketioEventTarget } from "../target/socket-event-target";
 
 /**
  * Attributes of a socket connection.
@@ -38,13 +38,13 @@ export type SocketAttributeValue<K extends SocketAttributeKey> =
   SocketAttributes[K];
 
 /**
- * SocketAttributeManager is a class that manages the attributes of a socket connection.
+ * MocketioAttributeManager is a class that manages the attributes of a socket connection.
  * It provides methods to get, set, and mock attributes, as well as to connect and disconnect the socket.
  * It is used to manage the state of the socket connection and to provide a consistent interface for interacting with the socket.
  * @internal
  */
-export class SocketAttributeManager {
-  constructor(private readonly clientEventTarget: SocketEventTarget) {}
+export class MocketioAttributeManager {
+  constructor(private readonly clientEventTarget: MocketioEventTarget) {}
 
   private readonly attributes: SocketAttributes = {
     active: false,
@@ -70,12 +70,12 @@ export class SocketAttributeManager {
   public mockAttribute = <K extends SocketAttributeKey>(
     key: K,
     value: SocketAttributeValue<K>,
-  ): SocketEventTarget => {
+  ): MocketioEventTarget => {
     this.attributes[key] = value;
     return this.clientEventTarget;
   };
 
-  public connect = (): SocketEventTarget => {
+  public connect = (): MocketioEventTarget => {
     this.attributes.connected = true;
     this.attributes.disconnected = false;
     return this.clientEventTarget;
@@ -83,7 +83,7 @@ export class SocketAttributeManager {
 
   public open = this.connect;
 
-  public disconnect = (): SocketEventTarget => {
+  public disconnect = (): MocketioEventTarget => {
     this.attributes.connected = false;
     this.attributes.disconnected = true;
     this.attributes.id = undefined;
@@ -92,12 +92,12 @@ export class SocketAttributeManager {
 
   public close = this.disconnect;
 
-  public timeout = (timeout: number): SocketEventTarget => {
+  public timeout = (timeout: number): MocketioEventTarget => {
     this.attributes.timeout = timeout;
     return this.clientEventTarget;
   };
 
-  public compress = (compress: boolean): SocketEventTarget => {
+  public compress = (compress: boolean): MocketioEventTarget => {
     this.attributes.compress = compress;
     return this.clientEventTarget;
   };

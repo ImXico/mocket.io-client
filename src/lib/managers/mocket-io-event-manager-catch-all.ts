@@ -1,5 +1,5 @@
 import { CATCH_ALL_EVENT_TYPE } from "../constants";
-import { SocketEventTarget } from "../target/socket-event-target";
+import { MocketioEventTarget } from "../target/socket-event-target";
 import { InnerHandler, OuterHandler } from "../types";
 import { handleCustomCatchAllEventWithNoAck, isCustomEvent } from "../util";
 
@@ -11,10 +11,10 @@ type AnyEventHandlerRegistry = Map<
   }
 >;
 
-export class SocketEventManagerCatchAll {
+export class MocketioEventManagerCatchAll {
   constructor(
-    private clientEventTarget: SocketEventTarget,
-    private serverEventTarget: SocketEventTarget,
+    private clientEventTarget: MocketioEventTarget,
+    private serverEventTarget: MocketioEventTarget,
   ) {}
 
   private readonly anyIncomingHandlerRegistry: AnyEventHandlerRegistry =
@@ -27,9 +27,9 @@ export class SocketEventManagerCatchAll {
    * Triggered when the client receives any event from the server.
    * Adds listeners to the end of the queue (i.e. they execute last)
    * @param handler - The handler to be called when any event is received.
-   * @returns {SocketEventTarget} - The client event target for chaining.
+   * @returns {MocketioEventTarget} - The client event target for chaining.
    */
-  public onAnyIncoming = (handler: OuterHandler): SocketEventTarget => {
+  public onAnyIncoming = (handler: OuterHandler): MocketioEventTarget => {
     const innerHandler = (event: Event) => {
       if (isCustomEvent(event) && !event.type.endsWith(":ack")) {
         return handleCustomCatchAllEventWithNoAck(event, handler);
@@ -54,9 +54,9 @@ export class SocketEventManagerCatchAll {
    * Triggered when the client emits any event to the server
    * Adds listeners to the end of the queue (i.e. they execute last)
    * @param handler - The handler to be called when any event is received.
-   * @returns {SocketEventTarget} - The client event target for chaining.
+   * @returns {MocketioEventTarget} - The client event target for chaining.
    */
-  public onAnyOutgoing = (handler: OuterHandler): SocketEventTarget => {
+  public onAnyOutgoing = (handler: OuterHandler): MocketioEventTarget => {
     const innerHandler = (event: Event) => {
       if (isCustomEvent(event) && !event.type.endsWith(":ack")) {
         return handleCustomCatchAllEventWithNoAck(event, handler);
@@ -78,7 +78,7 @@ export class SocketEventManagerCatchAll {
     return this.clientEventTarget;
   };
 
-  public offAnyIncoming = (handler?: OuterHandler): SocketEventTarget => {
+  public offAnyIncoming = (handler?: OuterHandler): MocketioEventTarget => {
     if (!handler) {
       this.anyIncomingHandlerRegistry.forEach((entry) => {
         this.clientEventTarget.removeEventListener(
@@ -106,7 +106,7 @@ export class SocketEventManagerCatchAll {
     return this.clientEventTarget;
   };
 
-  public offAnyOutgoing = (handler?: OuterHandler): SocketEventTarget => {
+  public offAnyOutgoing = (handler?: OuterHandler): MocketioEventTarget => {
     if (!handler) {
       this.anyOutgoingHandlerRegistry.forEach((entry) => {
         this.serverEventTarget.removeEventListener(
@@ -134,7 +134,7 @@ export class SocketEventManagerCatchAll {
     return this.clientEventTarget;
   };
 
-  public prependAnyIncoming = (handler: OuterHandler): SocketEventTarget => {
+  public prependAnyIncoming = (handler: OuterHandler): MocketioEventTarget => {
     // Create an inner handler that adapts the event format
     const innerHandler = (event: Event) => {
       if (isCustomEvent(event) && !event.type.endsWith(":ack")) {
@@ -158,7 +158,7 @@ export class SocketEventManagerCatchAll {
     return this.clientEventTarget;
   };
 
-  public prependAnyOutgoing = (handler: OuterHandler): SocketEventTarget => {
+  public prependAnyOutgoing = (handler: OuterHandler): MocketioEventTarget => {
     // Create an inner handler that adapts the event format for outgoing events
     const innerHandler = (event: Event) => {
       if (isCustomEvent(event) && !event.type.endsWith(":ack")) {

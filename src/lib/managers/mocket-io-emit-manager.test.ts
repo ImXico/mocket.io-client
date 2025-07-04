@@ -1,17 +1,17 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
-import { SocketEmitManager } from "./socket-emit-manager";
-import { SocketEventTarget } from "../target/socket-event-target";
-import { SocketAttributes } from "./socket-attribute-manager";
+import { MocketioEmitManager } from "./mocket-io-emit-manager";
+import { MocketioEventTarget } from "../target/socket-event-target";
+import { SocketAttributes } from "./mocket-io-attribute-manager";
 
-describe("SocketEmitManager", () => {
-  let clientEventTarget: SocketEventTarget;
-  let serverEventTarget: SocketEventTarget;
+describe("MocketioEmitManager", () => {
+  let clientEventTarget: MocketioEventTarget;
+  let serverEventTarget: MocketioEventTarget;
   let clientSocketAttributes: SocketAttributes;
-  let socketEmitManager: SocketEmitManager;
+  let socketEmitManager: MocketioEmitManager;
 
   beforeEach(() => {
-    clientEventTarget = new SocketEventTarget();
-    serverEventTarget = new SocketEventTarget();
+    clientEventTarget = new MocketioEventTarget();
+    serverEventTarget = new MocketioEventTarget();
     clientSocketAttributes = {
       connected: false,
       disconnected: false,
@@ -20,7 +20,7 @@ describe("SocketEmitManager", () => {
       recovered: false,
       io: undefined as any,
     };
-    socketEmitManager = new SocketEmitManager(
+    socketEmitManager = new MocketioEmitManager(
       clientEventTarget,
       serverEventTarget,
       clientSocketAttributes,

@@ -3,7 +3,7 @@ import {
   SocketAttributes,
   SocketAttributeValue,
 } from "../managers";
-import { SocketEventTarget } from "../target/socket-event-target";
+import { MocketioEventTarget } from "../target/socket-event-target";
 import { OuterHandler } from "../types";
 
 export type MockedSocketIoClientApi = {
@@ -12,20 +12,20 @@ export type MockedSocketIoClientApi = {
   recovered: boolean;
   active: boolean;
   id: string | undefined;
-  open: () => SocketEventTarget;
-  close: () => SocketEventTarget;
-  connect: () => SocketEventTarget;
-  disconnect: () => SocketEventTarget;
-  compress: (compress: boolean) => SocketEventTarget;
-  timeout: (timeout: number) => SocketEventTarget;
+  open: () => MocketioEventTarget;
+  close: () => MocketioEventTarget;
+  connect: () => MocketioEventTarget;
+  disconnect: () => MocketioEventTarget;
+  compress: (compress: boolean) => MocketioEventTarget;
+  timeout: (timeout: number) => MocketioEventTarget;
   send: (
     data: any,
     callback?: (response: any) => void,
-  ) => SocketEventTarget | Promise<void>;
+  ) => MocketioEventTarget | Promise<void>;
   emit: <T extends string = string>(
     eventKey: T,
     args?: any[],
-  ) => SocketEventTarget;
+  ) => MocketioEventTarget;
   emitWithAck: <T extends string = string>(
     eventKey: T,
     ...args: any[]
@@ -33,21 +33,21 @@ export type MockedSocketIoClientApi = {
   listeners: (eventKey: string) => OuterHandler[];
   listenersAny: () => OuterHandler[];
   listenersAnyOutgoing: () => OuterHandler[];
-  off: (eventKey: string, handler: OuterHandler) => SocketEventTarget;
-  offAny: (handler: OuterHandler) => SocketEventTarget;
-  offAnyOutgoing: (handler: OuterHandler) => SocketEventTarget;
+  off: (eventKey: string, handler: OuterHandler) => MocketioEventTarget;
+  offAny: (handler: OuterHandler) => MocketioEventTarget;
+  offAnyOutgoing: (handler: OuterHandler) => MocketioEventTarget;
   on: <T extends string = string>(
     eventKey: T,
     handler: OuterHandler,
-  ) => SocketEventTarget;
-  onAny: (handler: OuterHandler) => SocketEventTarget;
-  onAnyOutgoing: (handler: OuterHandler) => SocketEventTarget;
+  ) => MocketioEventTarget;
+  onAny: (handler: OuterHandler) => MocketioEventTarget;
+  onAnyOutgoing: (handler: OuterHandler) => MocketioEventTarget;
   once: <T extends string = string>(
     eventKey: T,
     handler: OuterHandler,
-  ) => SocketEventTarget;
-  prependAny: (handler: OuterHandler) => SocketEventTarget;
-  prependAnyOutgoing: (handler: OuterHandler) => SocketEventTarget;
+  ) => MocketioEventTarget;
+  prependAny: (handler: OuterHandler) => MocketioEventTarget;
+  prependAnyOutgoing: (handler: OuterHandler) => MocketioEventTarget;
 };
 
 /**
@@ -62,21 +62,21 @@ export type MocketioClientContextClientApi = {
   mockAttribute: <K extends SocketAttributeKey>(
     key: K,
     value: SocketAttributeValue<K>,
-  ) => SocketEventTarget;
-  mockOpen: () => SocketEventTarget;
-  mockClose: () => SocketEventTarget;
-  mockConnect: () => SocketEventTarget;
-  mockDisconnect: () => SocketEventTarget;
-  mockCompress: (value: boolean) => SocketEventTarget;
-  mockTimeout: (timeout: number) => SocketEventTarget;
+  ) => MocketioEventTarget;
+  mockOpen: () => MocketioEventTarget;
+  mockClose: () => MocketioEventTarget;
+  mockConnect: () => MocketioEventTarget;
+  mockDisconnect: () => MocketioEventTarget;
+  mockCompress: (value: boolean) => MocketioEventTarget;
+  mockTimeout: (timeout: number) => MocketioEventTarget;
   mockSend: (
     data: any,
     callback?: (response: any) => void,
-  ) => SocketEventTarget | Promise<void>;
+  ) => MocketioEventTarget | Promise<void>;
   mockEmit: <T extends string = string>(
     eventKey: T,
     ...args: any[]
-  ) => SocketEventTarget;
+  ) => MocketioEventTarget;
   mockEmitWithAck: <T extends string = string>(
     eventKey: T,
     ...args: any[]
@@ -84,21 +84,21 @@ export type MocketioClientContextClientApi = {
   mockListeners: (eventKey: string) => OuterHandler[];
   mockListenersAnyIncoming: () => OuterHandler[];
   mockListenersAnyOutgoing: () => OuterHandler[];
-  mockOff: (eventKey: string, handler: OuterHandler) => SocketEventTarget;
-  mockOffAnyIncoming: (handler: OuterHandler) => SocketEventTarget;
-  mockOffAnyOutgoing: (handler: OuterHandler) => SocketEventTarget;
+  mockOff: (eventKey: string, handler: OuterHandler) => MocketioEventTarget;
+  mockOffAnyIncoming: (handler: OuterHandler) => MocketioEventTarget;
+  mockOffAnyOutgoing: (handler: OuterHandler) => MocketioEventTarget;
   mockOn: <T extends string = string>(
     eventKey: T,
     handler: OuterHandler,
-  ) => SocketEventTarget;
-  mockOnAnyIncoming: (handler: OuterHandler) => SocketEventTarget;
-  mockOnAnyOutgoing: (handler: OuterHandler) => SocketEventTarget;
+  ) => MocketioEventTarget;
+  mockOnAnyIncoming: (handler: OuterHandler) => MocketioEventTarget;
+  mockOnAnyOutgoing: (handler: OuterHandler) => MocketioEventTarget;
   mockOnce: <T extends string = string>(
     eventKey: T,
     handler: OuterHandler,
-  ) => SocketEventTarget;
-  mockPrependAnyIncoming: (handler: OuterHandler) => SocketEventTarget;
-  mockPrependAnyOutgoing: (handler: OuterHandler) => SocketEventTarget;
+  ) => MocketioEventTarget;
+  mockPrependAnyIncoming: (handler: OuterHandler) => MocketioEventTarget;
+  mockPrependAnyOutgoing: (handler: OuterHandler) => MocketioEventTarget;
 };
 
 /**

@@ -1,14 +1,14 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { SocketAttributeManager } from "./socket-attribute-manager";
-import { SocketEventTarget } from "../target/socket-event-target";
+import { MocketioAttributeManager } from "./mocket-io-attribute-manager";
+import { MocketioEventTarget } from "../target/socket-event-target";
 
-describe("SocketAttributeManager", () => {
-  let eventTarget: SocketEventTarget;
-  let manager: SocketAttributeManager;
+describe("MocketioAttributeManager", () => {
+  let eventTarget: MocketioEventTarget;
+  let manager: MocketioAttributeManager;
 
   beforeEach(() => {
-    eventTarget = new SocketEventTarget();
-    manager = new SocketAttributeManager(eventTarget);
+    eventTarget = new MocketioEventTarget();
+    manager = new MocketioAttributeManager(eventTarget);
   });
 
   it("should initialize with correct default values", () => {

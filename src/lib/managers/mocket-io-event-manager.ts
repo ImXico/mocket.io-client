@@ -1,4 +1,4 @@
-import { SocketEventTarget } from "../target/socket-event-target";
+import { MocketioEventTarget } from "../target/socket-event-target";
 import { InnerHandler, OuterHandler } from "../types";
 import { handleCustomEventWithNoAck, isCustomEvent } from "../util";
 
@@ -18,15 +18,15 @@ type EventHandlerRegistry = Map<
   >
 >;
 
-export class SocketEventManager {
-  constructor(private clientEventTarget: SocketEventTarget) {}
+export class MocketioEventManager {
+  constructor(private clientEventTarget: MocketioEventTarget) {}
 
   private readonly handlerRegistry: EventHandlerRegistry = new Map();
 
   public clientOn = (
     eventKey: string,
     handler: OuterHandler,
-  ): SocketEventTarget => {
+  ): MocketioEventTarget => {
     if (!this.handlerRegistry.has(eventKey)) {
       this.handlerRegistry.set(eventKey, new Map());
     }
@@ -50,7 +50,7 @@ export class SocketEventManager {
   public once = (
     eventKey: string,
     handler: OuterHandler,
-  ): SocketEventTarget => {
+  ): MocketioEventTarget => {
     if (!this.handlerRegistry.has(eventKey)) {
       this.handlerRegistry.set(eventKey, new Map());
     }
@@ -73,7 +73,10 @@ export class SocketEventManager {
     return this.clientEventTarget;
   };
 
-  public off = (eventKey: string, handler: OuterHandler): SocketEventTarget => {
+  public off = (
+    eventKey: string,
+    handler: OuterHandler,
+  ): MocketioEventTarget => {
     const eventHandlers = this.handlerRegistry.get(eventKey);
 
     if (eventHandlers === undefined) {

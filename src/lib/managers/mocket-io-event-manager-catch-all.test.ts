@@ -1,17 +1,17 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { SocketEventManagerCatchAll } from "./socket-event-manager-catch-all";
-import { SocketEventTarget } from "../target/socket-event-target";
+import { MocketioEventManagerCatchAll } from "./mocket-io-event-manager-catch-all";
+import { MocketioEventTarget } from "../target/socket-event-target";
 import { CATCH_ALL_EVENT_TYPE } from "../constants";
 
-describe("SocketEventManagerCatchAll", () => {
-  let clientEventTarget: SocketEventTarget;
-  let serverEventTarget: SocketEventTarget;
-  let catchAllManager: SocketEventManagerCatchAll;
+describe("MocketioEventManagerCatchAll", () => {
+  let clientEventTarget: MocketioEventTarget;
+  let serverEventTarget: MocketioEventTarget;
+  let catchAllManager: MocketioEventManagerCatchAll;
 
   beforeEach(() => {
-    clientEventTarget = new SocketEventTarget();
-    serverEventTarget = new SocketEventTarget();
-    catchAllManager = new SocketEventManagerCatchAll(
+    clientEventTarget = new MocketioEventTarget();
+    serverEventTarget = new MocketioEventTarget();
+    catchAllManager = new MocketioEventManagerCatchAll(
       clientEventTarget,
       serverEventTarget,
     );
