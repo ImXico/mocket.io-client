@@ -1,8 +1,6 @@
 import { io, Socket } from "socket.io-client";
 
 type ServerToClientEvents = {
-  connect: () => void;
-  disconnect: () => void;
   userJoined: (username: string, totalUsers: number) => void;
   userLeft: (username: string, totalUsers: number) => void;
   chatMessage: (message: ChatMessage) => void;
@@ -39,7 +37,6 @@ export class ChatRoomClient {
 
   constructor(serverUrl: string = "http://localhost:8000", options = {}) {
     this.socket = io(serverUrl, {
-      autoConnect: false,
       reconnection: true,
       reconnectionAttempts: 5,
       ...options,
@@ -56,6 +53,9 @@ export class ChatRoomClient {
 
     this.socket.on("disconnect", () => {
       this._isConnected = false;
+      this._currentRoom = "";
+      this._users = [];
+      this._typing.clear();
       console.info("Disconnected from server");
     });
 
@@ -83,33 +83,6 @@ export class ChatRoomClient {
 
     this.socket.on("error", (message) => {
       console.error(`Server error: ${message}`);
-    });
-  }
-
-  public connect(): Promise<boolean> {
-    return new Promise((resolve) => {
-      if (this._isConnected) {
-        resolve(true);
-        return;
-      }
-
-      const onConnect = () => {
-        this.socket.off("connect", onConnect);
-        this.socket.off("connect_error", onConnectError);
-        resolve(true);
-      };
-
-      const onConnectError = (err: Error) => {
-        console.error("Connection error:", err);
-        this.socket.off("connect", onConnect);
-        this.socket.off("connect_error", onConnectError);
-        resolve(false);
-      };
-
-      this.socket.once("connect", onConnect);
-      this.socket.once("connect_error", onConnectError);
-
-      this.socket.connect();
     });
   }
 
@@ -181,13 +154,6 @@ export class ChatRoomClient {
     }
 
     this.socket.emit("typing", isTyping);
-  }
-
-  public disconnect(): void {
-    this.socket.disconnect();
-    this._currentRoom = "";
-    this._users = [];
-    this._typing.clear();
   }
 
   get isConnected(): boolean {

@@ -1,23 +1,21 @@
 import { vi } from "vitest";
 import { io } from "socket.io-client";
 import { test as baseTest } from "vitest";
-import { attachMocketioClient } from "../lib/client/mocket-io-client-attacher";
-import {
-  IMocketioClient,
-  MocketioClient,
-} from "../lib/client/mocket-io-client";
+import { attachMocketioFixture } from "../lib/fixture/mocket-io-fixture-attacher";
+import { MocketioFixture } from "../lib/fixture/mocket-io-fixture";
+import { MocketioFixtureExternalApi } from "../lib/fixture/types.mocketio";
 
 export interface MocketioClientFixture {
-  mocketioClient: IMocketioClient;
+  mocketio: MocketioFixtureExternalApi;
 }
 
 const withMocketioClient = baseTest.extend<MocketioClientFixture>({
-  mocketioClient: async ({}, use) => {
+  mocketio: async ({}, use) => {
     // Setup the fixture before each test function
-    const mocketioClient = attachMocketioClient(io, new MocketioClient());
+    const mocketio = attachMocketioFixture(io, new MocketioFixture());
 
     // Use the fixture value
-    await use(mocketioClient);
+    await use(mocketio);
 
     // Cleanup - reset the io mock
     vi.mocked(io).mockReset();

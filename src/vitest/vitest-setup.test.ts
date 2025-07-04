@@ -1,18 +1,18 @@
 import { describe, expect, test, vi, afterEach } from "vitest";
 import { io as originalIo } from "socket.io-client";
-import { attachMocketioClient } from "../lib/client/mocket-io-client-attacher";
-import { MocketioClient } from "../lib/client/mocket-io-client";
+import { attachMocketioFixture } from "../lib/fixture/mocket-io-fixture-attacher";
+import { MocketioFixture } from "../lib/fixture/mocket-io-fixture";
 import { itWithMocketioClient, testWithMocketioClient } from "./vitest-context";
 
-vi.mock("../lib/client/mocket-io-client", () => ({
-  MocketioClient: vi.fn().mockImplementation(() => ({
+vi.mock("../lib/fixture/mocket-io-fixture", () => ({
+  MocketioFixture: vi.fn().mockImplementation(() => ({
     client: { mockClient: true },
     server: { mockServer: true },
   })),
 }));
 
-vi.mock("../lib/client/mocket-io-client-attacher", () => ({
-  attachMocketioClient: vi.fn().mockImplementation((io, context) => ({
+vi.mock("../lib/fixture/mocket-io-fixture-attacher", () => ({
+  attachMocketioFixture: vi.fn().mockImplementation((io, context) => ({
     io,
     context,
     mockImplementation: "mocked",
@@ -29,18 +29,18 @@ describe("vitest.setup.ts", () => {
     expect(vi.isMockFunction(originalIo)).toBe(true);
   });
 
-  test("testWithMocketioClient provides a IMocketioClient fixture", () => {
+  test("testWithMocketioClient provides a fixture", () => {
     // Use the test runner with our fixture
     testWithMocketioClient(
       "fixture provides mocked socket io",
-      ({ mocketioClient }) => {
+      ({ mocketio }) => {
         // Check that we received the properly constructed mock
-        expect(mocketioClient).toBeDefined();
-        expect(mocketioClient).toHaveProperty("mockImplementation", "mocked");
+        expect(mocketio).toBeDefined();
+        expect(mocketio).toHaveProperty("mockImplementation", "mocked");
 
-        // Verify createMockedSocketIo was called with the right parameters
-        expect(attachMocketioClient).toHaveBeenCalledTimes(1);
-        expect(attachMocketioClient).toHaveBeenCalledWith(
+        // Verify attachMocketioFixture was called with the right parameters
+        expect(attachMocketioFixture).toHaveBeenCalledTimes(1);
+        expect(attachMocketioFixture).toHaveBeenCalledWith(
           originalIo,
           expect.any(Object),
         );
@@ -55,17 +55,17 @@ describe("vitest.setup.ts", () => {
     expect(itWithMocketioClient).toBe(testWithMocketioClient);
   });
 
-  test("MocketioClient is instantiated for each test", () => {
-    vi.mocked(MocketioClient).mockClear();
+  test.only("MocketioFixture is instantiated for each test", () => {
+    vi.mocked(MocketioFixture).mockClear();
 
     testWithMocketioClient("creates new context", () => {
-      expect(MocketioClient).toHaveBeenCalledTimes(1);
+      expect(MocketioFixture).toHaveBeenCalledTimes(1);
     });
 
-    vi.mocked(MocketioClient).mockClear();
+    vi.mocked(MocketioFixture).mockClear();
 
     testWithMocketioClient("creates another new context", () => {
-      expect(MocketioClient).toHaveBeenCalledTimes(1);
+      expect(MocketioFixture).toHaveBeenCalledTimes(1);
     });
   });
 });

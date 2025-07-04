@@ -6,55 +6,10 @@ import {
 import { MocketioEventTarget } from "../target/mocket-io-event-target";
 import { OuterHandler } from "../types";
 
-export type MockedSocketIoClientApi = {
-  connected: boolean;
-  disconnected: boolean;
-  recovered: boolean;
-  active: boolean;
-  id: string | undefined;
-  open: () => MocketioEventTarget;
-  close: () => MocketioEventTarget;
-  connect: () => MocketioEventTarget;
-  disconnect: () => MocketioEventTarget;
-  compress: (compress: boolean) => MocketioEventTarget;
-  timeout: (timeout: number) => MocketioEventTarget;
-  send: (
-    data: any,
-    callback?: (response: any) => void,
-  ) => MocketioEventTarget | Promise<void>;
-  emit: <T extends string = string>(
-    eventKey: T,
-    args?: any[],
-  ) => MocketioEventTarget;
-  emitWithAck: <T extends string = string>(
-    eventKey: T,
-    ...args: any[]
-  ) => Promise<any>;
-  listeners: (eventKey: string) => OuterHandler[];
-  listenersAny: () => OuterHandler[];
-  listenersAnyOutgoing: () => OuterHandler[];
-  off: (eventKey: string, handler: OuterHandler) => MocketioEventTarget;
-  offAny: (handler: OuterHandler) => MocketioEventTarget;
-  offAnyOutgoing: (handler: OuterHandler) => MocketioEventTarget;
-  on: <T extends string = string>(
-    eventKey: T,
-    handler: OuterHandler,
-  ) => MocketioEventTarget;
-  onAny: (handler: OuterHandler) => MocketioEventTarget;
-  onAnyOutgoing: (handler: OuterHandler) => MocketioEventTarget;
-  once: <T extends string = string>(
-    eventKey: T,
-    handler: OuterHandler,
-  ) => MocketioEventTarget;
-  prependAny: (handler: OuterHandler) => MocketioEventTarget;
-  prependAnyOutgoing: (handler: OuterHandler) => MocketioEventTarget;
-};
-
 /**
- * The type of the socket.io client.
- * This is a subset of the actual socket.io client API.
+ * TODO
  */
-export type MocketioClientContextClientApi = {
+export type MocketioFixtureInternalClientApi = {
   getAttributes: () => SocketAttributes;
   getAttribute: <K extends SocketAttributeKey>(
     key: K,
@@ -102,10 +57,38 @@ export type MocketioClientContextClientApi = {
 };
 
 /**
- * The type of the socket.io server.
+ * This is a subset of the actual socket.io-client API.
+ * We're only exposing fixture methods that provide testing value not available through the regular API
+ */
+export type MocketioFixtureExternalClientApi = Pick<
+  MocketioFixtureInternalClientApi,
+  | "getAttributes"
+  | "getAttribute"
+  | "mockAttribute"
+  | "mockOpen"
+  | "mockClose"
+  | "mockConnect"
+  | "mockDisconnect"
+>;
+
+/**
+ * TODO
  * This is a subset of the actual socket.io server API.
  */
-export type MocketioClientContextMinimalServerApi = {
+type MocketioFixtureServerApi = {
   mockEmit: (eventKey: string, ...args: any[]) => void;
   mockOn: (eventKey: string, handler: (...args: any[]) => any) => void;
 };
+
+export type MocketioFixtureInternalServerApi = MocketioFixtureServerApi;
+export type MocketioFixtureExternalServerApi = MocketioFixtureServerApi;
+
+export interface MocketioFixtureInternalApi {
+  client: MocketioFixtureInternalClientApi;
+  server: MocketioFixtureInternalServerApi;
+}
+
+export interface MocketioFixtureExternalApi {
+  client: MocketioFixtureExternalClientApi;
+  server: MocketioFixtureExternalServerApi;
+}

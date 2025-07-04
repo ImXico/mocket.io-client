@@ -6,16 +6,12 @@ import {
 } from "../managers";
 import { MocketioEventTarget } from "../target/mocket-io-event-target";
 import {
-  MocketioClientContextClientApi,
-  MocketioClientContextMinimalServerApi,
-} from "./types";
+  MocketioFixtureInternalApi,
+  MocketioFixtureInternalClientApi,
+  MocketioFixtureInternalServerApi,
+} from "./types.mocketio";
 
-export interface IMocketioClient {
-  client: MocketioClientContextClientApi;
-  server: MocketioClientContextMinimalServerApi;
-}
-
-export class MocketioClient implements IMocketioClient {
+export class MocketioFixture implements MocketioFixtureInternalApi {
   private readonly clientEventTarget = new MocketioEventTarget();
   private readonly serverEventTarget = new MocketioEventTarget();
 
@@ -63,10 +59,10 @@ export class MocketioClient implements IMocketioClient {
     mockOnce: this.eventManager.once,
     mockPrependAnyIncoming: this.eventManagerCatchAll.prependAnyIncoming,
     mockPrependAnyOutgoing: this.eventManagerCatchAll.prependAnyOutgoing,
-  } satisfies MocketioClientContextClientApi;
+  } satisfies MocketioFixtureInternalClientApi;
 
   public readonly server = {
     mockEmit: this.emitManager.emitFromServer,
     mockOn: this.emitManager.serverOn,
-  } satisfies MocketioClientContextMinimalServerApi;
+  } satisfies MocketioFixtureInternalServerApi;
 }
