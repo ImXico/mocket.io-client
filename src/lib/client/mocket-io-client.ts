@@ -8,7 +8,7 @@ import { SocketEventTarget } from "../target/socket-event-target";
 import {
   MocketioClientContextClientApi,
   MocketioClientContextMinimalServerApi,
-} from "../types";
+} from "./types";
 
 export interface IMocketioClient {
   client: MocketioClientContextClientApi;

@@ -1,6 +1,6 @@
 import { IMocketioClient } from "./mocket-io-client";
-import { MockedSocketIoClientApi } from "../types";
 import { vi } from "vitest";
+import { MockedSocketIoClientApi } from "./types";
 
 export const attachMocketioClient = (
   io: unknown,
