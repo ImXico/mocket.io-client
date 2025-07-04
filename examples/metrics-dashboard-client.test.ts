@@ -4,7 +4,7 @@ import {
   SystemMetrics,
   SystemAlert,
 } from "./metrics-dashboard-client";
-import { itWithMocketioClient } from "../src/runners/vitest.attach-mocket-io-client";
+import { itWithMocketioClient } from "../src/vitest/vitest.attach-mocket-io-client";
 
 describe("MetricsDashboardClient", () => {
   let dashboardClient: MetricsDashboardClient;
