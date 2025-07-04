@@ -20,11 +20,11 @@ describe("ChatRoomClient", () => {
   describe("Connection Management", () => {
     itWithMocketioClient(
       "should connect successfully",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
 
         // Mock successful connection
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
 
         const result = await chatClient.connect();
         expect(result).toBe(true);
@@ -34,17 +34,17 @@ describe("ChatRoomClient", () => {
 
     itWithMocketioClient(
       "should handle disconnect",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
 
         // Connect successfully
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
 
         await chatClient.connect();
         expect(chatClient.isConnected).toBe(true);
 
         // Then disconnect
-        mockedSocketIo.server.mockEmit("disconnect");
+        mocketioClient.server.mockEmit("disconnect");
         chatClient.disconnect();
 
         expect(chatClient.isConnected).toBe(false);
@@ -55,16 +55,16 @@ describe("ChatRoomClient", () => {
 
     itWithMocketioClient(
       "should handle server-initiated disconnect",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
 
         // Connect successfully
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
         await chatClient.connect();
         expect(chatClient.isConnected).toBe(true);
 
         // Server initiates disconnect
-        mockedSocketIo.server.mockEmit("disconnect");
+        mocketioClient.server.mockEmit("disconnect");
         expect(chatClient.isConnected).toBe(false);
       },
     );
@@ -73,15 +73,15 @@ describe("ChatRoomClient", () => {
   describe("Room Management", () => {
     itWithMocketioClient(
       "should join room successfully",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
 
         // Connect successfully
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
         await chatClient.connect();
 
         // Setup room join handler
-        mockedSocketIo.server.mockOn("joinRoom", (username, room, callback) => {
+        mocketioClient.server.mockOn("joinRoom", (username, room, callback) => {
           expect(username).toBe("testuser");
           expect(room).toBe("general");
           callback(true);
@@ -96,7 +96,7 @@ describe("ChatRoomClient", () => {
 
     itWithMocketioClient(
       "should fail to join room when not connected",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
         // Not connecting
 
@@ -109,15 +109,15 @@ describe("ChatRoomClient", () => {
 
     itWithMocketioClient(
       "should handle room join rejection from server",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
 
         // Connect successfully
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
         await chatClient.connect();
 
         // Setup room join handler with rejection
-        mockedSocketIo.server.mockOn("joinRoom", (username, room, callback) => {
+        mocketioClient.server.mockOn("joinRoom", (username, room, callback) => {
           callback(false, "Room is full");
         });
 
@@ -130,21 +130,21 @@ describe("ChatRoomClient", () => {
 
     itWithMocketioClient(
       "should leave room successfully",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
 
         // Connect and join room
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
         await chatClient.connect();
 
-        mockedSocketIo.server.mockOn("joinRoom", (username, room, callback) => {
+        mocketioClient.server.mockOn("joinRoom", (username, room, callback) => {
           callback(true);
         });
 
         await chatClient.joinRoom("testuser", "general");
 
         // Setup leave room handler
-        mockedSocketIo.server.mockOn("leaveRoom", (callback) => {
+        mocketioClient.server.mockOn("leaveRoom", (callback) => {
           callback(true);
         });
 
@@ -157,11 +157,11 @@ describe("ChatRoomClient", () => {
 
     itWithMocketioClient(
       "should fail to leave room when not in a room",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
 
         // Connect but don't join a room
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
         await chatClient.connect();
 
         const result = await chatClient.leaveRoom();
@@ -173,21 +173,21 @@ describe("ChatRoomClient", () => {
   describe("Message Handling", () => {
     itWithMocketioClient(
       "should send message successfully",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
 
         // Connect and join room
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
         await chatClient.connect();
 
-        mockedSocketIo.server.mockOn("joinRoom", (username, room, callback) => {
+        mocketioClient.server.mockOn("joinRoom", (username, room, callback) => {
           callback(true);
         });
 
         await chatClient.joinRoom("testuser", "general");
 
         // Setup message handler
-        mockedSocketIo.server.mockOn("sendMessage", (message, callback) => {
+        mocketioClient.server.mockOn("sendMessage", (message, callback) => {
           expect(message).toBe("Hello, world!");
           callback(true);
         });
@@ -199,11 +199,11 @@ describe("ChatRoomClient", () => {
 
     itWithMocketioClient(
       "should fail to send message when not in a room",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
 
         // Connect but don't join a room
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
         await chatClient.connect();
 
         const result = await chatClient.sendMessage("Hello, world!");
@@ -213,21 +213,21 @@ describe("ChatRoomClient", () => {
 
     itWithMocketioClient(
       "should handle message failure from server",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
 
         // Connect and join room
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
         await chatClient.connect();
 
-        mockedSocketIo.server.mockOn("joinRoom", (username, room, callback) => {
+        mocketioClient.server.mockOn("joinRoom", (username, room, callback) => {
           callback(true);
         });
 
         await chatClient.joinRoom("testuser", "general");
 
         // Setup message handler with failure
-        mockedSocketIo.server.mockOn("sendMessage", (message, callback) => {
+        mocketioClient.server.mockOn("sendMessage", (message, callback) => {
           callback(false);
         });
 
@@ -238,14 +238,14 @@ describe("ChatRoomClient", () => {
 
     itWithMocketioClient(
       "should receive chat messages",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
 
         // Connect and join room
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
         await chatClient.connect();
 
-        mockedSocketIo.server.mockOn("joinRoom", (username, room, callback) => {
+        mocketioClient.server.mockOn("joinRoom", (username, room, callback) => {
           callback(true);
         });
 
@@ -259,7 +259,7 @@ describe("ChatRoomClient", () => {
           timestamp: Date.now(),
         };
 
-        mockedSocketIo.server.mockEmit("chatMessage", testMessage);
+        mocketioClient.server.mockEmit("chatMessage", testMessage);
 
         // Check if message was received
         expect(chatClient.messages).toHaveLength(1);
@@ -273,7 +273,7 @@ describe("ChatRoomClient", () => {
           timestamp: Date.now(),
         };
 
-        mockedSocketIo.server.mockEmit("chatMessage", testMessage2);
+        mocketioClient.server.mockEmit("chatMessage", testMessage2);
 
         // Check if both messages are there
         expect(chatClient.messages).toHaveLength(2);
@@ -285,22 +285,22 @@ describe("ChatRoomClient", () => {
   describe("User Management", () => {
     itWithMocketioClient(
       "should track users joining the room",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
 
         // Connect and join room
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
         await chatClient.connect();
 
-        mockedSocketIo.server.mockOn("joinRoom", (username, room, callback) => {
+        mocketioClient.server.mockOn("joinRoom", (username, room, callback) => {
           callback(true);
         });
 
         await chatClient.joinRoom("testuser", "general");
 
         // Simulate other users joining
-        mockedSocketIo.server.mockEmit("userJoined", "user2", 2);
-        mockedSocketIo.server.mockEmit("userJoined", "user3", 3);
+        mocketioClient.server.mockEmit("userJoined", "user2", 2);
+        mocketioClient.server.mockEmit("userJoined", "user3", 3);
 
         // Should have both other users (not including self)
         expect(chatClient.users).toContain("user2");
@@ -311,21 +311,21 @@ describe("ChatRoomClient", () => {
 
     itWithMocketioClient(
       "should track users leaving the room",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
 
         // Connect and join room
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
         await chatClient.connect();
 
-        mockedSocketIo.server.mockOn("joinRoom", (username, room, callback) => {
+        mocketioClient.server.mockOn("joinRoom", (username, room, callback) => {
           callback(true);
         });
 
         await chatClient.joinRoom("testuser", "general");
 
         // Set initial users via roomUsers event
-        mockedSocketIo.server.mockEmit("roomUsers", [
+        mocketioClient.server.mockEmit("roomUsers", [
           "testuser",
           "user2",
           "user3",
@@ -333,7 +333,7 @@ describe("ChatRoomClient", () => {
         expect(chatClient.users).toEqual(["testuser", "user2", "user3"]);
 
         // Simulate user leaving
-        mockedSocketIo.server.mockEmit("userLeft", "user2", 2);
+        mocketioClient.server.mockEmit("userLeft", "user2", 2);
 
         // Should have removed the user
         expect(chatClient.users).not.toContain("user2");
@@ -345,14 +345,14 @@ describe("ChatRoomClient", () => {
 
     itWithMocketioClient(
       "should handle room users update",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
 
         // Connect and join room
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
         await chatClient.connect();
 
-        mockedSocketIo.server.mockOn("joinRoom", (username, room, callback) => {
+        mocketioClient.server.mockOn("joinRoom", (username, room, callback) => {
           callback(true);
         });
 
@@ -360,7 +360,7 @@ describe("ChatRoomClient", () => {
 
         // Set users via roomUsers event
         const userList = ["testuser", "user2", "user3", "user4"];
-        mockedSocketIo.server.mockEmit("roomUsers", userList);
+        mocketioClient.server.mockEmit("roomUsers", userList);
 
         expect(chatClient.users).toEqual(userList);
       },
@@ -370,14 +370,14 @@ describe("ChatRoomClient", () => {
   describe("Typing Indicator", () => {
     itWithMocketioClient(
       "should send typing indicator",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
 
         // Connect and join room
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
         await chatClient.connect();
 
-        mockedSocketIo.server.mockOn("joinRoom", (username, room, callback) => {
+        mocketioClient.server.mockOn("joinRoom", (username, room, callback) => {
           callback(true);
         });
 
@@ -385,7 +385,7 @@ describe("ChatRoomClient", () => {
 
         // Setup typing handler to track calls
         const typingSpy = vi.fn();
-        mockedSocketIo.server.mockOn("typing", typingSpy);
+        mocketioClient.server.mockOn("typing", typingSpy);
 
         // Test both true and false cases
         chatClient.setTyping(true);
@@ -398,16 +398,16 @@ describe("ChatRoomClient", () => {
 
     itWithMocketioClient(
       "should not send typing when not in room",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
 
         // Connect but don't join room
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
         await chatClient.connect();
 
         // Setup typing handler to track calls
         const typingSpy = vi.fn();
-        mockedSocketIo.server.mockOn("typing", typingSpy);
+        mocketioClient.server.mockOn("typing", typingSpy);
 
         chatClient.setTyping(true);
         expect(typingSpy).not.toHaveBeenCalled();
@@ -418,18 +418,18 @@ describe("ChatRoomClient", () => {
   describe("Error Handling", () => {
     itWithMocketioClient(
       "should handle server errors",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
 
         // Connect
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
         await chatClient.connect();
 
         // Mock console.error to track it's called
         const errorSpy = vi.spyOn(console, "error");
 
         // Send error from server
-        mockedSocketIo.server.mockEmit("error", "Invalid operation");
+        mocketioClient.server.mockEmit("error", "Invalid operation");
 
         // Should have logged the error
         expect(errorSpy).toHaveBeenCalledWith(
@@ -442,11 +442,11 @@ describe("ChatRoomClient", () => {
   describe("Edge Cases", () => {
     itWithMocketioClient(
       "should handle multiple connects without issue",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
 
         // Connect once
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
         await chatClient.connect();
         expect(chatClient.isConnected).toBe(true);
 
@@ -458,15 +458,15 @@ describe("ChatRoomClient", () => {
 
     itWithMocketioClient(
       "should not add current user to users list when joining",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
 
         // Connect
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
         await chatClient.connect();
 
         // Setup join handler
-        mockedSocketIo.server.mockOn("joinRoom", (username, room, callback) => {
+        mocketioClient.server.mockOn("joinRoom", (username, room, callback) => {
           callback(true);
         });
 
@@ -474,7 +474,7 @@ describe("ChatRoomClient", () => {
         await chatClient.joinRoom("testuser", "general");
 
         // Simulate userJoined event for self
-        mockedSocketIo.server.mockEmit("userJoined", "testuser", 1);
+        mocketioClient.server.mockEmit("userJoined", "testuser", 1);
 
         // Users list should not include self from userJoined event
         expect(chatClient.users).toEqual([]);
@@ -483,14 +483,14 @@ describe("ChatRoomClient", () => {
 
     itWithMocketioClient(
       "should handle empty room names",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
 
         // Connect
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
         await chatClient.connect();
 
-        mockedSocketIo.server.mockOn("joinRoom", (username, room, callback) => {
+        mocketioClient.server.mockOn("joinRoom", (username, room, callback) => {
           expect(room).toBe("");
           callback(true);
         });
@@ -503,21 +503,21 @@ describe("ChatRoomClient", () => {
 
     itWithMocketioClient(
       "should handle empty messages",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
 
         // Connect and join room
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
         await chatClient.connect();
 
-        mockedSocketIo.server.mockOn("joinRoom", (username, room, callback) => {
+        mocketioClient.server.mockOn("joinRoom", (username, room, callback) => {
           callback(true);
         });
 
         await chatClient.joinRoom("testuser", "general");
 
         // Setup message handler to verify empty message
-        mockedSocketIo.server.mockOn("sendMessage", (message, callback) => {
+        mocketioClient.server.mockOn("sendMessage", (message, callback) => {
           expect(message).toBe("");
           callback(true);
         });

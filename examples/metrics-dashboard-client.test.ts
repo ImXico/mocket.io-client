@@ -18,20 +18,20 @@ describe("MetricsDashboardClient", () => {
   describe("Connection Management", () => {
     itWithMocketioClient(
       "should handle reconnections",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         dashboardClient = new MetricsDashboardClient("http://localhost:9999");
 
         // First connect successfully
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
         await dashboardClient.connect();
         expect(dashboardClient.isConnected).toBe(true);
 
         // Then disconnect
-        mockedSocketIo.server.mockEmit("disconnect");
+        mocketioClient.server.mockEmit("disconnect");
         expect(dashboardClient.isConnected).toBe(false);
 
         // Then reconnect
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
         await dashboardClient.connect();
         expect(dashboardClient.isConnected).toBe(true);
       },
@@ -39,15 +39,15 @@ describe("MetricsDashboardClient", () => {
 
     itWithMocketioClient(
       "should handle duplicate connect calls",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         dashboardClient = new MetricsDashboardClient("http://localhost:9999");
 
         // Connect first time
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
         await dashboardClient.connect();
 
         // Track connection attempts
-        const connectSpy = vi.spyOn(mockedSocketIo.client, "mockConnect");
+        const connectSpy = vi.spyOn(mocketioClient.client, "mockConnect");
 
         // Connect second time - should not trigger a new connection
         await dashboardClient.connect();
@@ -60,7 +60,7 @@ describe("MetricsDashboardClient", () => {
   describe("Metric Subscription", () => {
     itWithMocketioClient(
       "should fail subscription when not connected",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         dashboardClient = new MetricsDashboardClient("http://localhost:9999");
 
         // Don't connect, try to subscribe immediately
@@ -76,15 +76,15 @@ describe("MetricsDashboardClient", () => {
 
     itWithMocketioClient(
       "should handle subscription failures",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         dashboardClient = new MetricsDashboardClient("http://localhost:9999");
 
         // Connect successfully
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
         await dashboardClient.connect();
 
         // Setup server to reject the subscription
-        mockedSocketIo.server.mockOn("subscribe", (metricTypes, callback) => {
+        mocketioClient.server.mockOn("subscribe", (metricTypes, callback) => {
           callback(false); // Simulate failure
         });
 
@@ -100,15 +100,15 @@ describe("MetricsDashboardClient", () => {
 
     itWithMocketioClient(
       "should handle duplicate subscriptions gracefully",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         dashboardClient = new MetricsDashboardClient("http://localhost:9999");
 
         // Connect successfully
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
         await dashboardClient.connect();
 
         // Setup server to accept subscriptions
-        mockedSocketIo.server.mockOn("subscribe", (metricTypes, callback) => {
+        mocketioClient.server.mockOn("subscribe", (metricTypes, callback) => {
           callback(true);
         });
 
@@ -128,11 +128,11 @@ describe("MetricsDashboardClient", () => {
   describe("Metric Updates", () => {
     itWithMocketioClient(
       "should handle metric updates with partial data",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         dashboardClient = new MetricsDashboardClient("http://localhost:9999");
 
         // Connect successfully
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
         await dashboardClient.connect();
 
         // Send a partial metric update
@@ -143,7 +143,7 @@ describe("MetricsDashboardClient", () => {
           // Missing activeUsers, responseTime and errorRate
         } as SystemMetrics;
 
-        mockedSocketIo.server.mockEmit("metric_update", partialMetrics);
+        mocketioClient.server.mockEmit("metric_update", partialMetrics);
 
         expect(dashboardClient.currentMetrics).toEqual(partialMetrics);
       },
@@ -151,11 +151,11 @@ describe("MetricsDashboardClient", () => {
 
     itWithMocketioClient(
       "should handle rapid metric updates",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         dashboardClient = new MetricsDashboardClient("http://localhost:9999");
 
         // Connect successfully
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
         await dashboardClient.connect();
 
         // Send multiple updates in quick succession
@@ -186,9 +186,9 @@ describe("MetricsDashboardClient", () => {
           errorRate: 0.3,
         };
 
-        mockedSocketIo.server.mockEmit("metric_update", metrics1);
-        mockedSocketIo.server.mockEmit("metric_update", metrics2);
-        mockedSocketIo.server.mockEmit("metric_update", metrics3);
+        mocketioClient.server.mockEmit("metric_update", metrics1);
+        mocketioClient.server.mockEmit("metric_update", metrics2);
+        mocketioClient.server.mockEmit("metric_update", metrics3);
 
         // Should have the latest metrics
         expect(dashboardClient.currentMetrics).toEqual(metrics3);
@@ -199,11 +199,11 @@ describe("MetricsDashboardClient", () => {
   describe("Alert Management", () => {
     itWithMocketioClient(
       "should handle multiple alerts",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         dashboardClient = new MetricsDashboardClient("http://localhost:9999");
 
         // Connect successfully
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
         await dashboardClient.connect();
 
         // Send multiple alerts
@@ -223,8 +223,8 @@ describe("MetricsDashboardClient", () => {
           source: "memory-monitor",
         };
 
-        mockedSocketIo.server.mockEmit("alert", alert1);
-        mockedSocketIo.server.mockEmit("alert", alert2);
+        mocketioClient.server.mockEmit("alert", alert1);
+        mocketioClient.server.mockEmit("alert", alert2);
 
         expect(dashboardClient.alerts).toHaveLength(2);
         expect(dashboardClient.alerts).toContainEqual(alert1);
@@ -234,11 +234,11 @@ describe("MetricsDashboardClient", () => {
 
     itWithMocketioClient(
       "should handle acknowledgment failure",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         dashboardClient = new MetricsDashboardClient("http://localhost:9999");
 
         // Connect successfully
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
         await dashboardClient.connect();
 
         // Add an alert
@@ -250,11 +250,11 @@ describe("MetricsDashboardClient", () => {
           source: "system-monitor",
         };
 
-        mockedSocketIo.server.mockEmit("alert", alert);
+        mocketioClient.server.mockEmit("alert", alert);
         expect(dashboardClient.alerts).toHaveLength(1);
 
         // Setup server to reject the acknowledgment
-        mockedSocketIo.server.mockOn(
+        mocketioClient.server.mockOn(
           "acknowledge_alert",
           (alertId, callback) => {
             expect(alertId).toBe("alert-123");
@@ -272,15 +272,15 @@ describe("MetricsDashboardClient", () => {
 
     itWithMocketioClient(
       "should not fail when acknowledging non-existent alert",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         dashboardClient = new MetricsDashboardClient("http://localhost:9999");
 
         // Connect successfully
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
         await dashboardClient.connect();
 
         // Setup server to accept the acknowledgment
-        mockedSocketIo.server.mockOn(
+        mocketioClient.server.mockOn(
           "acknowledge_alert",
           (alertId, callback) => {
             callback(true);
@@ -299,15 +299,15 @@ describe("MetricsDashboardClient", () => {
   describe("Action Requests", () => {
     itWithMocketioClient(
       "should handle action success with result",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         dashboardClient = new MetricsDashboardClient("http://localhost:9999");
 
         // Connect successfully
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
         await dashboardClient.connect();
 
         // Setup server to handle the action
-        mockedSocketIo.server.mockOn(
+        mocketioClient.server.mockOn(
           "request_action",
           (actionType, params, callback) => {
             expect(actionType).toBe("restart_service");
@@ -326,15 +326,15 @@ describe("MetricsDashboardClient", () => {
 
     itWithMocketioClient(
       "should handle action failure",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         dashboardClient = new MetricsDashboardClient("http://localhost:9999");
 
         // Connect successfully
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
         await dashboardClient.connect();
 
         // Setup server to handle the action with failure
-        mockedSocketIo.server.mockOn(
+        mocketioClient.server.mockOn(
           "request_action",
           (actionType, params, callback) => {
             callback(false);
@@ -349,7 +349,7 @@ describe("MetricsDashboardClient", () => {
 
     itWithMocketioClient(
       "should fail action request when not connected",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         dashboardClient = new MetricsDashboardClient("http://localhost:9999");
 
         // Do not connect
@@ -364,24 +364,24 @@ describe("MetricsDashboardClient", () => {
   describe("System Status Updates", () => {
     itWithMocketioClient(
       "should handle status changes",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         dashboardClient = new MetricsDashboardClient("http://localhost:9999");
 
         // Connect successfully
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
         await dashboardClient.connect();
 
         // Default status should be offline
         expect(dashboardClient.systemStatus).toBe("offline");
 
         // Send status updates
-        mockedSocketIo.server.mockEmit("status_change", "online");
+        mocketioClient.server.mockEmit("status_change", "online");
         expect(dashboardClient.systemStatus).toBe("online");
 
-        mockedSocketIo.server.mockEmit("status_change", "degraded");
+        mocketioClient.server.mockEmit("status_change", "degraded");
         expect(dashboardClient.systemStatus).toBe("degraded");
 
-        mockedSocketIo.server.mockEmit("status_change", "maintenance");
+        mocketioClient.server.mockEmit("status_change", "maintenance");
         expect(dashboardClient.systemStatus).toBe("maintenance");
       },
     );
@@ -390,15 +390,15 @@ describe("MetricsDashboardClient", () => {
   describe("Unsubscribe from Metrics", () => {
     itWithMocketioClient(
       "should handle unsubscribe correctly",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         dashboardClient = new MetricsDashboardClient("http://localhost:9999");
 
         // Connect successfully
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
         await dashboardClient.connect();
 
         // Setup subscriptions
-        mockedSocketIo.server.mockOn("subscribe", (metricTypes, callback) => {
+        mocketioClient.server.mockOn("subscribe", (metricTypes, callback) => {
           callback(true);
         });
 
@@ -414,7 +414,7 @@ describe("MetricsDashboardClient", () => {
         ]);
 
         // Setup unsubscribe
-        mockedSocketIo.server.mockOn("unsubscribe", (metricTypes, callback) => {
+        mocketioClient.server.mockOn("unsubscribe", (metricTypes, callback) => {
           expect(metricTypes).toEqual(["cpu"]);
           callback(true);
         });
@@ -431,22 +431,22 @@ describe("MetricsDashboardClient", () => {
 
     itWithMocketioClient(
       "should handle unsubscribe failure",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         dashboardClient = new MetricsDashboardClient("http://localhost:9999");
 
         // Connect successfully
-        mockedSocketIo.server.mockEmit("connect");
+        mocketioClient.server.mockEmit("connect");
         await dashboardClient.connect();
 
         // Setup subscriptions
-        mockedSocketIo.server.mockOn("subscribe", (metricTypes, callback) => {
+        mocketioClient.server.mockOn("subscribe", (metricTypes, callback) => {
           callback(true);
         });
 
         await dashboardClient.subscribeToMetrics(["cpu", "memory"]);
 
         // Setup unsubscribe to fail
-        mockedSocketIo.server.mockOn("unsubscribe", (metricTypes, callback) => {
+        mocketioClient.server.mockOn("unsubscribe", (metricTypes, callback) => {
           callback(false);
         });
 
@@ -460,7 +460,7 @@ describe("MetricsDashboardClient", () => {
 
     itWithMocketioClient(
       "should handle unsubscribe when not connected",
-      async ({ mockedSocketIo }) => {
+      async ({ mocketioClient }) => {
         dashboardClient = new MetricsDashboardClient("http://localhost:9999");
 
         // Don't connect
