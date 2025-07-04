@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { ChatRoomClient, ChatMessage } from "./chat-room-client";
-import { itWithMockedIoContext } from "../src/runners/vitest.setup";
+import { itWithMocketioClient } from "../src/runners/vitest.attach-mocket-io-client";
 
 describe("ChatRoomClient", () => {
   let chatClient: ChatRoomClient;
@@ -18,7 +18,7 @@ describe("ChatRoomClient", () => {
   });
 
   describe("Connection Management", () => {
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should connect successfully",
       async ({ mockedSocketIo }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
@@ -32,7 +32,7 @@ describe("ChatRoomClient", () => {
       },
     );
 
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should handle disconnect",
       async ({ mockedSocketIo }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
@@ -53,7 +53,7 @@ describe("ChatRoomClient", () => {
       },
     );
 
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should handle server-initiated disconnect",
       async ({ mockedSocketIo }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
@@ -71,7 +71,7 @@ describe("ChatRoomClient", () => {
   });
 
   describe("Room Management", () => {
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should join room successfully",
       async ({ mockedSocketIo }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
@@ -94,7 +94,7 @@ describe("ChatRoomClient", () => {
       },
     );
 
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should fail to join room when not connected",
       async ({ mockedSocketIo }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
@@ -107,7 +107,7 @@ describe("ChatRoomClient", () => {
       },
     );
 
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should handle room join rejection from server",
       async ({ mockedSocketIo }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
@@ -128,7 +128,7 @@ describe("ChatRoomClient", () => {
       },
     );
 
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should leave room successfully",
       async ({ mockedSocketIo }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
@@ -155,7 +155,7 @@ describe("ChatRoomClient", () => {
       },
     );
 
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should fail to leave room when not in a room",
       async ({ mockedSocketIo }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
@@ -171,7 +171,7 @@ describe("ChatRoomClient", () => {
   });
 
   describe("Message Handling", () => {
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should send message successfully",
       async ({ mockedSocketIo }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
@@ -197,7 +197,7 @@ describe("ChatRoomClient", () => {
       },
     );
 
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should fail to send message when not in a room",
       async ({ mockedSocketIo }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
@@ -211,7 +211,7 @@ describe("ChatRoomClient", () => {
       },
     );
 
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should handle message failure from server",
       async ({ mockedSocketIo }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
@@ -236,7 +236,7 @@ describe("ChatRoomClient", () => {
       },
     );
 
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should receive chat messages",
       async ({ mockedSocketIo }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
@@ -283,7 +283,7 @@ describe("ChatRoomClient", () => {
   });
 
   describe("User Management", () => {
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should track users joining the room",
       async ({ mockedSocketIo }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
@@ -309,7 +309,7 @@ describe("ChatRoomClient", () => {
       },
     );
 
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should track users leaving the room",
       async ({ mockedSocketIo }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
@@ -343,7 +343,7 @@ describe("ChatRoomClient", () => {
       },
     );
 
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should handle room users update",
       async ({ mockedSocketIo }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
@@ -368,7 +368,7 @@ describe("ChatRoomClient", () => {
   });
 
   describe("Typing Indicator", () => {
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should send typing indicator",
       async ({ mockedSocketIo }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
@@ -396,7 +396,7 @@ describe("ChatRoomClient", () => {
       },
     );
 
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should not send typing when not in room",
       async ({ mockedSocketIo }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
@@ -416,7 +416,7 @@ describe("ChatRoomClient", () => {
   });
 
   describe("Error Handling", () => {
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should handle server errors",
       async ({ mockedSocketIo }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
@@ -440,7 +440,7 @@ describe("ChatRoomClient", () => {
   });
 
   describe("Edge Cases", () => {
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should handle multiple connects without issue",
       async ({ mockedSocketIo }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
@@ -456,7 +456,7 @@ describe("ChatRoomClient", () => {
       },
     );
 
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should not add current user to users list when joining",
       async ({ mockedSocketIo }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
@@ -481,7 +481,7 @@ describe("ChatRoomClient", () => {
       },
     );
 
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should handle empty room names",
       async ({ mockedSocketIo }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");
@@ -501,7 +501,7 @@ describe("ChatRoomClient", () => {
       },
     );
 
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should handle empty messages",
       async ({ mockedSocketIo }) => {
         chatClient = new ChatRoomClient("http://localhost:9999");

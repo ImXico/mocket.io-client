@@ -5,6 +5,8 @@ import {
 } from "./managers";
 import { SocketEventTarget } from "./target/socket-event-target";
 
+// FIXME move these two to types inside /managers
+
 /**
  * DOM-style handler that receives an Event object.
  */
@@ -63,7 +65,7 @@ export type MockedSocketIoClientApi = {
  * The type of the socket.io client.
  * This is a subset of the actual socket.io client API.
  */
-export type MockedSocketIoContextClient = {
+export type MocketioClientContextClientApi = {
   getAttributes: () => SocketAttributes;
   getAttribute: <K extends SocketAttributeKey>(
     key: K,
@@ -114,16 +116,7 @@ export type MockedSocketIoContextClient = {
  * The type of the socket.io server.
  * This is a subset of the actual socket.io server API.
  */
-export type MockSocketIoContextMinimalServer = {
+export type MocketioClientContextMinimalServerApi = {
   mockEmit: (eventKey: string, ...args: any[]) => void;
   mockOn: (eventKey: string, handler: (...args: any[]) => any) => void;
-};
-
-/**
- * The type of the mocked Socket.io context.
- * This is used to mock the Socket.io client and server in tests.
- */
-export type MockedSocketIo = {
-  client: MockedSocketIoContextClient;
-  server: MockSocketIoContextMinimalServer;
 };

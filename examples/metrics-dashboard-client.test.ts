@@ -4,7 +4,7 @@ import {
   SystemMetrics,
   SystemAlert,
 } from "./metrics-dashboard-client";
-import { itWithMockedIoContext } from "../src/runners/vitest.setup";
+import { itWithMocketioClient } from "../src/runners/vitest.attach-mocket-io-client";
 
 describe("MetricsDashboardClient", () => {
   let dashboardClient: MetricsDashboardClient;
@@ -16,7 +16,7 @@ describe("MetricsDashboardClient", () => {
   });
 
   describe("Connection Management", () => {
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should handle reconnections",
       async ({ mockedSocketIo }) => {
         dashboardClient = new MetricsDashboardClient("http://localhost:9999");
@@ -37,7 +37,7 @@ describe("MetricsDashboardClient", () => {
       },
     );
 
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should handle duplicate connect calls",
       async ({ mockedSocketIo }) => {
         dashboardClient = new MetricsDashboardClient("http://localhost:9999");
@@ -58,7 +58,7 @@ describe("MetricsDashboardClient", () => {
   });
 
   describe("Metric Subscription", () => {
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should fail subscription when not connected",
       async ({ mockedSocketIo }) => {
         dashboardClient = new MetricsDashboardClient("http://localhost:9999");
@@ -74,7 +74,7 @@ describe("MetricsDashboardClient", () => {
       },
     );
 
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should handle subscription failures",
       async ({ mockedSocketIo }) => {
         dashboardClient = new MetricsDashboardClient("http://localhost:9999");
@@ -98,7 +98,7 @@ describe("MetricsDashboardClient", () => {
       },
     );
 
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should handle duplicate subscriptions gracefully",
       async ({ mockedSocketIo }) => {
         dashboardClient = new MetricsDashboardClient("http://localhost:9999");
@@ -126,7 +126,7 @@ describe("MetricsDashboardClient", () => {
   });
 
   describe("Metric Updates", () => {
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should handle metric updates with partial data",
       async ({ mockedSocketIo }) => {
         dashboardClient = new MetricsDashboardClient("http://localhost:9999");
@@ -149,7 +149,7 @@ describe("MetricsDashboardClient", () => {
       },
     );
 
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should handle rapid metric updates",
       async ({ mockedSocketIo }) => {
         dashboardClient = new MetricsDashboardClient("http://localhost:9999");
@@ -197,7 +197,7 @@ describe("MetricsDashboardClient", () => {
   });
 
   describe("Alert Management", () => {
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should handle multiple alerts",
       async ({ mockedSocketIo }) => {
         dashboardClient = new MetricsDashboardClient("http://localhost:9999");
@@ -232,7 +232,7 @@ describe("MetricsDashboardClient", () => {
       },
     );
 
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should handle acknowledgment failure",
       async ({ mockedSocketIo }) => {
         dashboardClient = new MetricsDashboardClient("http://localhost:9999");
@@ -270,7 +270,7 @@ describe("MetricsDashboardClient", () => {
       },
     );
 
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should not fail when acknowledging non-existent alert",
       async ({ mockedSocketIo }) => {
         dashboardClient = new MetricsDashboardClient("http://localhost:9999");
@@ -297,7 +297,7 @@ describe("MetricsDashboardClient", () => {
   });
 
   describe("Action Requests", () => {
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should handle action success with result",
       async ({ mockedSocketIo }) => {
         dashboardClient = new MetricsDashboardClient("http://localhost:9999");
@@ -324,7 +324,7 @@ describe("MetricsDashboardClient", () => {
       },
     );
 
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should handle action failure",
       async ({ mockedSocketIo }) => {
         dashboardClient = new MetricsDashboardClient("http://localhost:9999");
@@ -347,7 +347,7 @@ describe("MetricsDashboardClient", () => {
       },
     );
 
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should fail action request when not connected",
       async ({ mockedSocketIo }) => {
         dashboardClient = new MetricsDashboardClient("http://localhost:9999");
@@ -362,7 +362,7 @@ describe("MetricsDashboardClient", () => {
   });
 
   describe("System Status Updates", () => {
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should handle status changes",
       async ({ mockedSocketIo }) => {
         dashboardClient = new MetricsDashboardClient("http://localhost:9999");
@@ -388,7 +388,7 @@ describe("MetricsDashboardClient", () => {
   });
 
   describe("Unsubscribe from Metrics", () => {
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should handle unsubscribe correctly",
       async ({ mockedSocketIo }) => {
         dashboardClient = new MetricsDashboardClient("http://localhost:9999");
@@ -429,7 +429,7 @@ describe("MetricsDashboardClient", () => {
       },
     );
 
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should handle unsubscribe failure",
       async ({ mockedSocketIo }) => {
         dashboardClient = new MetricsDashboardClient("http://localhost:9999");
@@ -458,7 +458,7 @@ describe("MetricsDashboardClient", () => {
       },
     );
 
-    itWithMockedIoContext(
+    itWithMocketioClient(
       "should handle unsubscribe when not connected",
       async ({ mockedSocketIo }) => {
         dashboardClient = new MetricsDashboardClient("http://localhost:9999");

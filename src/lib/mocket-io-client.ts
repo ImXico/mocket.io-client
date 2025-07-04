@@ -6,11 +6,16 @@ import {
 } from "./managers";
 import { SocketEventTarget } from "./target/socket-event-target";
 import {
-  MockedSocketIoContextClient,
-  MockSocketIoContextMinimalServer,
+  MocketioClientContextClientApi,
+  MocketioClientContextMinimalServerApi,
 } from "./types";
 
-export class MockedSocketIoContext {
+export interface IMocketioClient {
+  client: MocketioClientContextClientApi;
+  server: MocketioClientContextMinimalServerApi;
+}
+
+export class MocketioClient implements IMocketioClient {
   private readonly clientEventTarget = new SocketEventTarget();
   private readonly serverEventTarget = new SocketEventTarget();
 
@@ -27,7 +32,7 @@ export class MockedSocketIoContext {
     this.serverEventTarget,
   );
 
-  private readonly emitManager = new SocketEmitManager(
+  readonly emitManager = new SocketEmitManager(
     this.clientEventTarget,
     this.serverEventTarget,
     this.attributeManager.getAttributes(),
@@ -58,10 +63,10 @@ export class MockedSocketIoContext {
     mockOnce: this.eventManager.once,
     mockPrependAnyIncoming: this.eventManagerCatchAll.prependAnyIncoming,
     mockPrependAnyOutgoing: this.eventManagerCatchAll.prependAnyOutgoing,
-  } satisfies MockedSocketIoContextClient;
+  } satisfies MocketioClientContextClientApi;
 
   public readonly server = {
     mockEmit: this.emitManager.emitFromServer,
     mockOn: this.emitManager.serverOn,
-  } satisfies MockSocketIoContextMinimalServer;
+  } satisfies MocketioClientContextMinimalServerApi;
 }
