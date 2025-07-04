@@ -1,11 +1,8 @@
 import { describe, expect, test, vi, afterEach } from "vitest";
 import { io as originalIo } from "socket.io-client";
-import {
-  testWithMocketioClient,
-  itWithMocketioClient,
-} from "./vitest.attach-mocket-io-client";
 import { attachMocketioClient } from "../lib/client/mocket-io-client-attacher";
 import { MocketioClient } from "../lib/client/mocket-io-client";
+import { itWithMocketioClient, testWithMocketioClient } from "./vitest-context";
 
 vi.mock("../lib/client/mocket-io-client", () => ({
   MocketioClient: vi.fn().mockImplementation(() => ({

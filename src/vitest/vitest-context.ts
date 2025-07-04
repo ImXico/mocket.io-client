@@ -11,14 +11,6 @@ export interface MocketioClientFixture {
   mocketioClient: IMocketioClient;
 }
 
-vi.mock("socket.io-client", async () => {
-  const actual = await vi.importActual("socket.io-client");
-  return {
-    ...actual,
-    io: vi.fn(),
-  };
-});
-
 const withMocketioClient = baseTest.extend<MocketioClientFixture>({
   mocketioClient: async ({}, use) => {
     // Setup the fixture before each test function
