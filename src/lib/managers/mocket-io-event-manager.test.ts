@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { MocketioEventManager } from "./mocket-io-event-manager";
-import { MocketioEventTarget } from "../target/socket-event-target";
+import { MocketioEventTarget } from "../target/mocket-io-event-target";
 
 describe("MocketioEventManager", () => {
   let socketEventManager: MocketioEventManager;

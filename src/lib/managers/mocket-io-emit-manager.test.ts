@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { MocketioEmitManager } from "./mocket-io-emit-manager";
-import { MocketioEventTarget } from "../target/socket-event-target";
+import { MocketioEventTarget } from "../target/mocket-io-event-target";
 import { SocketAttributes } from "./mocket-io-attribute-manager";
 
 describe("MocketioEmitManager", () => {

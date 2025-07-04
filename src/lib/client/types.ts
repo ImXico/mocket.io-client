@@ -3,7 +3,7 @@ import {
   SocketAttributes,
   SocketAttributeValue,
 } from "../managers";
-import { MocketioEventTarget } from "../target/socket-event-target";
+import { MocketioEventTarget } from "../target/mocket-io-event-target";
 import { OuterHandler } from "../types";
 
 export type MockedSocketIoClientApi = {

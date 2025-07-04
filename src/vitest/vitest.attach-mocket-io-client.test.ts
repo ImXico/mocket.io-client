@@ -4,21 +4,21 @@ import {
   testWithMocketioClient,
   itWithMocketioClient,
 } from "./vitest.attach-mocket-io-client";
-import { attachMocketioClient } from "../lib/client/mocket-io-attach";
+import { attachMocketioClient } from "../lib/client/mocket-io-client-attacher";
 import { MocketioClient } from "../lib/client/mocket-io-client";
-
-vi.mock("../lib/client/mocket-io-attach", () => ({
-  attachMocketioClient: vi.fn().mockImplementation((io, context) => ({
-    io,
-    context,
-    mockImplementation: "mocked",
-  })),
-}));
 
 vi.mock("../lib/client/mocket-io-client", () => ({
   MocketioClient: vi.fn().mockImplementation(() => ({
     client: { mockClient: true },
     server: { mockServer: true },
+  })),
+}));
+
+vi.mock("../lib/client/mocket-io-client-attacher", () => ({
+  attachMocketioClient: vi.fn().mockImplementation((io, context) => ({
+    io,
+    context,
+    mockImplementation: "mocked",
   })),
 }));
 

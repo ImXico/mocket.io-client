@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { MocketioEventManagerCatchAll } from "./mocket-io-event-manager-catch-all";
-import { MocketioEventTarget } from "../target/socket-event-target";
+import { MocketioEventTarget } from "../target/mocket-io-event-target";
 import { CATCH_ALL_EVENT_TYPE } from "../constants";
 
 describe("MocketioEventManagerCatchAll", () => {

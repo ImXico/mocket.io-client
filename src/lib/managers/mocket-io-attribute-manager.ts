@@ -1,5 +1,5 @@
 import { Manager } from "socket.io-client";
-import { MocketioEventTarget } from "../target/socket-event-target";
+import { MocketioEventTarget } from "../target/mocket-io-event-target";
 
 /**
  * Attributes of a socket connection.

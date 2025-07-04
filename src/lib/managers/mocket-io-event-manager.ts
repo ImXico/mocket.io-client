@@ -1,4 +1,4 @@
-import { MocketioEventTarget } from "../target/socket-event-target";
+import { MocketioEventTarget } from "../target/mocket-io-event-target";
 import { InnerHandler, OuterHandler } from "../types";
 import { handleCustomEventWithNoAck, isCustomEvent } from "../util";
 

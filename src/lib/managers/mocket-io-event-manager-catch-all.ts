@@ -1,5 +1,5 @@
 import { CATCH_ALL_EVENT_TYPE } from "../constants";
-import { MocketioEventTarget } from "../target/socket-event-target";
+import { MocketioEventTarget } from "../target/mocket-io-event-target";
 import { InnerHandler, OuterHandler } from "../types";
 import { handleCustomCatchAllEventWithNoAck, isCustomEvent } from "../util";
 
