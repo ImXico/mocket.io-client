@@ -3,12 +3,12 @@ import {
   SocketEmitManager,
   SocketEventManager,
   SocketEventManagerCatchAll,
-} from "./managers";
-import { SocketEventTarget } from "./target/socket-event-target";
+} from "../managers";
+import { SocketEventTarget } from "../target/socket-event-target";
 import {
   MocketioClientContextClientApi,
   MocketioClientContextMinimalServerApi,
-} from "./types";
+} from "../types";
 
 export interface IMocketioClient {
   client: MocketioClientContextClientApi;

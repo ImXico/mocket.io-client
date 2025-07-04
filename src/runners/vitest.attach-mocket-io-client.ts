@@ -1,8 +1,11 @@
 import { vi } from "vitest";
 import { io } from "socket.io-client";
 import { test as baseTest } from "vitest";
-import { attachMocketioClient } from "../lib/mocket-io-attach";
-import { IMocketioClient, MocketioClient } from "../lib/mocket-io-client";
+import { attachMocketioClient } from "../lib/client/mocket-io-attach";
+import {
+  IMocketioClient,
+  MocketioClient,
+} from "../lib/client/mocket-io-client";
 
 export interface MocketioClientFixture {
   mocketioClient: IMocketioClient;
