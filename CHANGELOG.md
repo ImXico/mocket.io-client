@@ -1,5 +1,11 @@
 # @xikww/mocket.io-client
 
+## 0.1.4
+
+### Patch Changes
+
+- Update README so that examples include all the imports needed
+
 ## 0.1.3
 
 ### Patch Changes
