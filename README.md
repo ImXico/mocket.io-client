@@ -8,6 +8,15 @@ A Vitest mocking library for testing [socket.io-client](https://socket.io/) inte
 npm install --save-dev @xikww/mocket.io-client
 ```
 
+Create a setup file for `vitest` (or use an existing one) with this:
+
+```typescript
+// e.g. a new file "vitest.mocketio-setup.ts"
+import { mockSocketioClient } from "@xikww/mocket.io-client/setup";
+
+mockSocketioClient();
+```
+
 Then, simply update your `vitest.config` to include the setup file:
 
 ```typescript
@@ -15,7 +24,7 @@ export default defineConfig({
   test: {
     setupFiles: [
       ...,
-      "@xikww/mocket.io-client/setup"
+      "./vitest.mocketio-setup.ts"
     ],
   },
 });
@@ -23,16 +32,16 @@ export default defineConfig({
 
 ## Usage
 
-This library exports a single function (two aliases) — a [custom Vitest Test Context](https://vitest.dev/guide/test-context.html#extend-test-context):
+This library exports a single function (two aliases) — a [custom Vitest Test Context](https://vitest.dev/guide/test-context.html#extend-test-context). In any of your test files, do:
 
 ```typescript
-import {
-  itWithMocketioClient, // alias 1
-  testWithMocketioClient, // alias 2
-} from "@xikww/mocket.io-client/context";
+import { _itWithMocketioClient } from "@xikww/mocket.io-client/context";
+import { io } from "socket.io-client";
+
+const itWithMocketioClient = _itWithMocketioClient(vi.mocked(io));
 ```
 
-For any test wrapped within this context:
+Now the custom context can be used. For any test wrapped within this context:
 
 ```typescript
 itWithMocketioClient("your test", ({ mocketio } => {
@@ -46,6 +55,11 @@ itWithMocketioClient("your test", ({ mocketio } => {
 **Basic server-driven connection/disconnection:**
 
 ```typescript
+import { _itWithMocketioClient } from "@xikww/mocket.io-client/context";
+import { io } from "socket.io-client";
+
+const itWithMocketioClient = _itWithMocketioClient(vi.mocked(io));
+
 describe("my tests", () => {
   itWithMocketioClient("handles connect/disconnect", ({ mocketio }) => {
     // Instantiate your regular object that calls `io(...)`
@@ -71,9 +85,10 @@ describe("my tests", () => {
 **Mock server-side handling (e.g. for testing client emissions and server acks):**
 
 ```typescript
-import { describe, it, expect } from "vitest";
-import { itWithMocketioClient } from "@xikww/mocket.io-client/context";
-import { YourSocketClient } from "./your-socket-client";
+import { _itWithMocketioClient } from "@xikww/mocket.io-client/context";
+import { io } from "socket.io-client";
+
+const itWithMocketioClient = _itWithMocketioClient(vi.mocked(io));
 
 describe("my tests", () => {
   itWithMocketioClient("mock server handler", async ({ mocketio }) => {
@@ -141,6 +156,7 @@ $ pnpm build
 For testing, you can run the following commands:
 
 ```bash
+$ pnpm test // run all tests
 $ pnpm test:lib // run the lib tests
 $ pnpm test:examples // run the tests in the examples folder
 ```
