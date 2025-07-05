@@ -38,8 +38,9 @@ export default defineConfig({
 This library exports a single function (two aliases) — a [custom Vitest Test Context](https://vitest.dev/guide/test-context.html#extend-test-context). In any of your test files, do:
 
 ```typescript
-import { _itWithMocketioClient } from "@xikww/mocket.io-client/context";
+import { vi } from "vitest";
 import { io } from "socket.io-client";
+import { _itWithMocketioClient } from "@xikww/mocket.io-client/context";
 
 const itWithMocketioClient = _itWithMocketioClient(vi.mocked(io));
 ```
@@ -58,8 +59,9 @@ itWithMocketioClient("your test", ({ mocketio } => {
 **Basic server-driven connection/disconnection:**
 
 ```typescript
-import { _itWithMocketioClient } from "@xikww/mocket.io-client/context";
 import { io } from "socket.io-client";
+import { describe, expect, vi } from "vitest";
+import { _itWithMocketioClient } from "@xikww/mocket.io-client/context";
 
 const itWithMocketioClient = _itWithMocketioClient(vi.mocked(io));
 
@@ -88,8 +90,9 @@ describe("my tests", () => {
 **Mock server-side handling (e.g. for testing client emissions and server acks):**
 
 ```typescript
-import { _itWithMocketioClient } from "@xikww/mocket.io-client/context";
 import { io } from "socket.io-client";
+import { describe, expect, vi } from "vitest";
+import { _itWithMocketioClient } from "@xikww/mocket.io-client/context";
 
 const itWithMocketioClient = _itWithMocketioClient(vi.mocked(io));
 
