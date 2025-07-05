@@ -1,5 +1,11 @@
 # @xikww/mocket.io-client
 
+## 0.1.1
+
+### Patch Changes
+
+- ef6d29d: Update README to reflect the new API
+
 ## 0.1.0
 
 ### Minor Changes
