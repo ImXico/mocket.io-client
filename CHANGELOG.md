@@ -1,5 +1,11 @@
 # @xikww/mocket.io-client
 
+## 0.1.3
+
+### Patch Changes
+
+- Add LICENSE and update README
+
 ## 0.1.2
 
 ### Patch Changes
