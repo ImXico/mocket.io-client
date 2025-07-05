@@ -2,6 +2,9 @@
 
 A Vitest mocking library for testing [socket.io-client](https://socket.io/) integrations without requiring actual server connections.
 
+[![npm version](https://badge.fury.io/js/@xikww%2Fmocket.io-client.svg)](https://badge.fury.io/js/@xikww%2Fmocket.io-client)
+[![GitHub](https://img.shields.io/github/license/ImXico/mocket.io-client)](https://github.com/ImXico/mocket.io-client/blob/main/LICENSE)
+
 ## Installation
 
 ```bash
