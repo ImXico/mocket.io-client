@@ -1,5 +1,13 @@
 {
   "name": "@xikww/mocket.io-client",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ImXico/mocket.io-client.git"
+  },
+  "homepage": "https://github.com/ImXico/mocket.io-client#readme",
+  "bugs": {
+    "url": "https://github.com/ImXico/mocket.io-client/issues"
+  },
   "version": "0.1.1",
   "description": "Mock Socket.IO client connections for reliable integration testing with Vitest",
   "type": "module",
@@ -9,7 +17,8 @@
   "files": [
     "dist/",
     "README.md",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "package.json"
   ],
   "main": "./dist/vitest-context.cjs",
   "module": "./dist/vitest-context.js",
