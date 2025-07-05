@@ -1,4 +1,4 @@
-import { describe, expect, beforeEach, vi, afterEach } from "vitest";
+import { describe, expect, beforeEach, vi } from "vitest";
 import { ChatRoomClient, ChatMessage } from "./chat-room-client";
 import { _itWithMocketioClient } from "../src/vitest/vitest-context";
 import { io } from "socket.io-client";
