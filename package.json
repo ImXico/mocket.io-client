@@ -8,7 +8,7 @@
   "bugs": {
     "url": "https://github.com/ImXico/mocket.io-client/issues"
   },
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Mock Socket.IO client connections for reliable integration testing with Vitest",
   "type": "module",
   "publishConfig": {
