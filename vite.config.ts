@@ -17,7 +17,7 @@ export default defineConfig({
       fileName: (format, name) => {
         return format === "es" ? `${name}.js` : `${name}.cjs`;
       },
-      formats: ["es", "cjs"], // Only ES and CommonJS
+      formats: ["es", "cjs"],
     },
     rollupOptions: {
       external: ["socket.io-client", "vitest"],

@@ -3,23 +3,18 @@
   "version": "0.1.0",
   "description": "Mock Socket.IO client connections for reliable integration testing with Vitest",
   "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
   "files": [
-    "dist"
+    "dist/",
+    "README.md",
+    "CHANGELOG.md"
   ],
-  "main": "./dist/vitest-setup.cjs",
-  "module": "./dist/vitest-setup.js",
-  "types": "./dist/vitest-setup.d.ts",
+  "main": "./dist/vitest-context.cjs",
+  "module": "./dist/vitest-context.js",
+  "types": "./dist/vitest-context.d.ts",
   "exports": {
-    "./setup": {
-      "import": {
-        "types": "./dist/vitest-setup.d.ts",
-        "default": "./dist/vitest-setup.js"
-      },
-      "require": {
-        "types": "./dist/vitest-setup.d.ts",
-        "default": "./dist/vitest-setup.cjs"
-      }
-    },
     "./context": {
       "import": {
         "types": "./dist/vitest-context.d.ts",
@@ -29,11 +24,22 @@
         "types": "./dist/vitest-context.d.ts",
         "default": "./dist/vitest-context.cjs"
       }
+    },
+    "./setup": {
+      "import": {
+        "types": "./dist/vitest-setup.d.ts",
+        "default": "./dist/vitest-setup.js"
+      },
+      "require": {
+        "types": "./dist/vitest-setup.d.ts",
+        "default": "./dist/vitest-setup.cjs"
+      }
     }
   },
   "scripts": {
     "test:lib": "vitest run --dir src",
-    "test:examples": "vitest run examples/*.test.ts",
+    "test:examples": "vitest --config examples/vitest.config.ts examples/",
+    "test": "pnpm test:lib && pnpm test:examples",
     "build": "vite build",
     "print-paths": "node -e 'console.log(module.paths)'",
     "prettier:check": "prettier --check .",
@@ -61,13 +67,11 @@
     "@types/node": "^24.0.10",
     "prettier": "^3.5.3",
     "typescript": "^5.8.2",
-    "vite": "^4.0.0"
+    "vite": "^4.0.0",
+    "vite-plugin-dts": "^4.5.3"
   },
   "peerDependencies": {
     "socket.io-client": "^4.8.1",
-    "vitest": "^3.0.8"
-  },
-  "dependencies": {
-    "vite-plugin-dts": "^4.5.3"
+    "vitest": ">=1.0.0"
   }
 }

@@ -4,7 +4,10 @@ import {
   SystemMetrics,
   SystemAlert,
 } from "./metrics-dashboard-client";
-import { itWithMocketioClient } from "../src/vitest/vitest-context";
+import { _itWithMocketioClient } from "../src/vitest/vitest-context";
+import { io } from "socket.io-client";
+
+const itWithMocketioClient = _itWithMocketioClient(vi.mocked(io));
 
 describe("MetricsDashboardClient", () => {
   let dashboardClient: MetricsDashboardClient;
