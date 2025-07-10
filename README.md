@@ -35,7 +35,7 @@ export default defineConfig({
 
 ## Usage
 
-This library exports a single function (two aliases) — a [custom Vitest Test Context](https://vitest.dev/guide/test-context.html#extend-test-context). In any of your test files, do:
+This library exports a single function (two aliases) — a [custom Vitest Test Context extender](https://vitest.dev/guide/test-context.html#extend-test-context):
 
 ```typescript
 import { vi } from "vitest";
@@ -43,11 +43,7 @@ import { io } from "socket.io-client";
 import { _itWithMocketioClient } from "@xikww/mocket.io-client/context";
 
 const itWithMocketioClient = _itWithMocketioClient(vi.mocked(io));
-```
 
-Now the custom context can be used. For any test wrapped within this context:
-
-```typescript
 itWithMocketioClient("your test", ({ mocketio } => {
   // 1. The `socket.io-client` API is, at this point, already mocked behind the scenes
   // 2. A fixture `mocketio` is available (see the API reference below)
@@ -175,4 +171,4 @@ pnpm changeset add
 
 ## License
 
-Distributed under the terms of the MIT license, "mocked.io-client" is free and open source software.
+Distributed under the terms of the MIT license, `mocket.io-client` is free and open source software.
